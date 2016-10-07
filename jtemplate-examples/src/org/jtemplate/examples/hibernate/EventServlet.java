@@ -35,11 +35,11 @@ public class EventServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Class<?> type = getClass();
         String servletPath = request.getServletPath();
+        response.setContentType(getServletContext().getMimeType(servletPath));
 
-        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)),
-            "text/html", type.getName());
+        Class<?> type = getClass();
+        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
 
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
 
@@ -62,5 +62,7 @@ public class EventServlet extends HttpServlet {
             session.save(new Event(request.getParameter("title"), new Date()));
             session.getTransaction().commit();
         }
+
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 }

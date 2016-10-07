@@ -36,11 +36,11 @@ public class RestaurantServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Class<?> type = getClass();
         String servletPath = request.getServletPath();
+        response.setContentType(getServletContext().getMimeType(servletPath));
 
-        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)),
-            "text/html", type.getName());
+        Class<?> type = getClass();
+        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
 
         MongoDatabase db = MongoClientManager.getMongoClient().getDatabase("test");
 

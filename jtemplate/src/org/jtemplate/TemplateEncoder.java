@@ -50,7 +50,6 @@ public class TemplateEncoder {
     }
 
     private URL url;
-    private String contentType;
     private String baseName;
 
     private HashMap<String, Object> context = new HashMap<>();
@@ -81,12 +80,9 @@ public class TemplateEncoder {
      *
      * @param url
      * The URL of the template.
-     *
-     * @param contentType
-     * The MIME type of the template.
      */
-    public TemplateEncoder(URL url, String contentType) {
-        this(url, contentType, null);
+    public TemplateEncoder(URL url) {
+        this(url, null);
     }
 
     /**
@@ -95,23 +91,15 @@ public class TemplateEncoder {
      * @param url
      * The URL of the template.
      *
-     * @param contentType
-     * The MIME type of the content produced by the template.
-     *
      * @param baseName
      * The base name of the template's resource bundle.
      */
-    public TemplateEncoder(URL url, String contentType, String baseName) {
+    public TemplateEncoder(URL url, String baseName) {
         if (url == null) {
             throw new IllegalArgumentException();
         }
 
-        if (contentType == null) {
-            throw new IllegalArgumentException();
-        }
-
         this.url = url;
-        this.contentType = contentType;
         this.baseName = baseName;
     }
 
@@ -123,19 +111,6 @@ public class TemplateEncoder {
      */
     public Map<String, Object> getContext() {
         return context;
-    }
-
-    /**
-     * Returns the MIME type of the content produced by the template.
-     *
-     * @param value
-     * The value to be encoded.
-     *
-     * @return
-     * The value's content type.
-     */
-    public String getContentType(Object value) {
-        return String.format("%s;charset=%s", contentType, UTF_8_ENCODING);
     }
 
     /**
