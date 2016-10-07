@@ -29,15 +29,12 @@ public class IteratorAdapterTest extends AbstractTest {
 
         LinkedList<Object> list2 = new LinkedList<>();
 
-        TestIterator iterator = new TestIterator(list1.iterator());
+        IteratorAdapter adapter = new IteratorAdapter(list1.iterator());
 
-        try (IteratorAdapter adapter = new IteratorAdapter(iterator)) {
-            for (Object element : adapter) {
-                list2.add(element);
-            }
+        for (Object element : adapter) {
+            list2.add(element);
         }
 
-        Assert.assertTrue(iterator.isClosed());
         Assert.assertEquals(listOf(2L, 4.0, "abc", true, new Date(0)), list2);
     }
 
@@ -47,15 +44,12 @@ public class IteratorAdapterTest extends AbstractTest {
 
         LinkedList<Object> list2 = new LinkedList<>();
 
-        TestIterator iterator = new TestIterator(list1.iterator());
+        IteratorAdapter adapter = new IteratorAdapter(list1.iterator());
 
-        try (IteratorAdapter adapter = new IteratorAdapter(iterator)) {
-            for (Object element : adapter) {
-                list2.add(element);
-            }
+        for (Object element : adapter) {
+            list2.add(element);
         }
 
-        Assert.assertTrue(iterator.isClosed());
         Assert.assertEquals(listOf(listOf(2L, 4.0, "abc", true, new Date(0))), list2);
     }
 
@@ -65,15 +59,12 @@ public class IteratorAdapterTest extends AbstractTest {
 
         LinkedList<Object> list2 = new LinkedList<>();
 
-        TestIterator iterator = new TestIterator(list1.iterator());
+        IteratorAdapter adapter = new IteratorAdapter(list1.iterator());
 
-        try (IteratorAdapter adapter = new IteratorAdapter(iterator)) {
-            for (Object element : adapter) {
-                list2.add(element);
-            }
+        for (Object element : adapter) {
+            list2.add(element);
         }
 
-        Assert.assertTrue(iterator.isClosed());
         Assert.assertEquals(listOf(mapOf(entry("a", 2L), entry("b", 4.0), entry("c", "abc"), entry("d", true), entry("e", new Date(0)))), list2);
     }
 }

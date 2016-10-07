@@ -288,50 +288,38 @@ public class TemplateEncoder {
                                 throw new IOException("Invalid section element.");
                             }
 
-                            List<?> list = (List<?>)value;
+                            Iterator<?> iterator = ((List<?>)value).iterator();
 
-                            try {
-                                Iterator<?> iterator = list.iterator();
+                            if (iterator.hasNext()) {
+                                includes = new HashMap<>();
 
-                                if (iterator.hasNext()) {
-                                    includes = new HashMap<>();
+                                while (iterator.hasNext()) {
+                                    Object element = iterator.next();
 
-                                    while (iterator.hasNext()) {
-                                        Object element = iterator.next();
-
-                                        if (iterator.hasNext()) {
-                                            reader.mark(0);
-                                        }
-
-                                        writeRoot(element, writer, locale, reader);
-
-                                        if (iterator.hasNext()) {
-                                            reader.reset();
-                                        }
+                                    if (iterator.hasNext()) {
+                                        reader.mark(0);
                                     }
-                                } else {
-                                    includes = new AbstractMap<String, Reader>() {
-                                        @Override
-                                        public Reader get(Object key) {
-                                            return new EmptyReader();
-                                        }
 
-                                        @Override
-                                        public Set<Entry<String, Reader>> entrySet() {
-                                            throw new UnsupportedOperationException();
-                                        }
-                                    };
+                                    writeRoot(element, writer, locale, reader);
 
-                                    writeRoot(Collections.emptyMap(), new NullWriter(), locale, reader);
-                                }
-                            } finally {
-                                if (list instanceof AutoCloseable) {
-                                    try {
-                                        ((AutoCloseable)list).close();
-                                    } catch (Exception exception) {
-                                        throw new IOException(exception);
+                                    if (iterator.hasNext()) {
+                                        reader.reset();
                                     }
                                 }
+                            } else {
+                                includes = new AbstractMap<String, Reader>() {
+                                    @Override
+                                    public Reader get(Object key) {
+                                        return new EmptyReader();
+                                    }
+
+                                    @Override
+                                    public Set<Entry<String, Reader>> entrySet() {
+                                        throw new UnsupportedOperationException();
+                                    }
+                                };
+
+                                writeRoot(Collections.emptyMap(), new NullWriter(), locale, reader);
                             }
 
                             includes = history.pop();

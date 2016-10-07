@@ -21,11 +21,8 @@ import java.util.Map;
 /**
  * Class that presents the contents of an iterator as an iterable list of
  * values.
- *
- * If the iterator's type implements {@link AutoCloseable}, it will be
- * automatically closed when the adapter is closed.
  */
-public class IteratorAdapter extends AbstractList<Object> implements AutoCloseable {
+public class IteratorAdapter extends AbstractList<Object> {
     private Iterator<?> iterator;
 
     /**
@@ -65,13 +62,6 @@ public class IteratorAdapter extends AbstractList<Object> implements AutoCloseab
                 return iterator.next();
             }
         };
-    }
-
-    @Override
-    public void close() throws Exception {
-        if (iterator instanceof AutoCloseable) {
-            ((AutoCloseable)iterator).close();
-        }
     }
 
     @Override
