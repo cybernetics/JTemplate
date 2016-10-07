@@ -14,10 +14,17 @@
 
 package org.jtemplate.examples.mysql;
 
+import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.jtemplate.TemplateEncoder;
 import org.jtemplate.sql.Parameters;
 import org.jtemplate.sql.ResultSetAdapter;
 
@@ -25,9 +32,11 @@ import static org.jtemplate.TemplateEncoder.mapOf;
 import static org.jtemplate.TemplateEncoder.entry;
 
 /**
- * Pet service.
+ * Pet servlet.
  */
-public class PetService {
+public class PetServlet extends HttpServlet {
+    private static final long serialVersionUID = 0;
+
     private static final String DB_URL = "jdbc:mysql://db.local:3306/menagerie?user=root&password=password";
 
     static {
@@ -38,21 +47,22 @@ public class PetService {
         }
     }
 
-    /**
-     * Retrieves a list of pets belonging to a given owner.
-     *
-     * @param owner
-     * The pet owner to search for.
-     *
-     * @return
-     * A list of pets belonging to the given owner.
-     */
-    public ResultSetAdapter getPets(String owner) throws SQLException {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Class<?> type = getClass();
+        String servletPath = request.getServletPath();
+
+        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)),
+            "text/html", type.getName());
+
         Parameters parameters = Parameters.parse("select name, species, sex, birth from pet where owner = :owner");
-        PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(parameters.getSQL());
 
-        parameters.apply(statement, mapOf(entry("owner", owner)));
+        try (PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(parameters.getSQL())) {
+            parameters.apply(statement, mapOf(entry("owner", request.getParameter("owner"))));
 
-        return new ResultSetAdapter(statement.executeQuery());
+            templateEncoder.writeValue(new ResultSetAdapter(statement.executeQuery()), response.getOutputStream());
+        } catch (SQLException exception) {
+            throw new ServletException(exception);
+        }
     }
 }

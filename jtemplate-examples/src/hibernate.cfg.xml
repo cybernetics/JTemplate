@@ -34,7 +34,7 @@
         <!-- Drop and re-create the database schema on startup -->
         <property name="hbm2ddl.auto">create</property>
 
-        <mapping resource="org/httprpc/examples/hibernate/Event.hbm.xml"/>
+        <mapping resource="org/jtemplate/examples/hibernate/Event.hbm.xml"/>
 
     </session-factory>
 

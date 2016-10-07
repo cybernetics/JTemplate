@@ -14,41 +14,33 @@
 
 package org.jtemplate.examples.hibernate;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.jtemplate.TemplateEncoder;
 import org.jtemplate.beans.BeanAdapter;
 
 /**
- * Event service.
+ * Event servlet.
  */
-public class EventService {
-    /**
-     * Adds an event.
-     *
-     * @param name
-     * The name of the event.
-     */
-    public void addEvent(String title) {
-        SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
+public class EventServlet extends HttpServlet {
+    private static final long serialVersionUID = 0;
 
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.save(new Event(title, new Date()));
-            session.getTransaction().commit();
-        }
-    }
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Class<?> type = getClass();
+        String servletPath = request.getServletPath();
 
-    /**
-     * Retrieves a list of all events.
-     *
-     * @return
-     * A list of all events.
-     */
-    public List<Map<String, ?>> getEvents() {
+        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)),
+            "text/html", type.getName());
+
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
 
         List<?> events;
@@ -58,6 +50,17 @@ public class EventService {
             session.getTransaction().commit();
         }
 
-        return BeanAdapter.adapt(events);
+        templateEncoder.writeValue(BeanAdapter.adapt(events), response.getOutputStream());
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.save(new Event(request.getParameter("title"), new Date()));
+            session.getTransaction().commit();
+        }
     }
 }
