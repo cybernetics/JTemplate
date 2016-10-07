@@ -14,13 +14,16 @@
 
 package org.jtemplate.beans;
 
-import org.jtemplate.AbstractTest;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Date;
 
-public class BeanAdapterTest extends AbstractTest {
+import static org.jtemplate.TemplateEncoder.listOf;
+import static org.jtemplate.TemplateEncoder.mapOf;
+import static org.jtemplate.TemplateEncoder.entry;
+
+public class BeanAdapterTest {
     @Test
     public void testBeanAdapter() {
         BeanAdapter adapter = new BeanAdapter(new TestBean());

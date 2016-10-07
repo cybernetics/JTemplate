@@ -19,11 +19,14 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.jtemplate.AbstractTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ResultSetAdapterTest extends AbstractTest {
+import static org.jtemplate.TemplateEncoder.listOf;
+import static org.jtemplate.TemplateEncoder.mapOf;
+import static org.jtemplate.TemplateEncoder.entry;
+
+public class ResultSetAdapterTest {
     @Test
     public void testResultSetAdapter() throws SQLException {
         LinkedList<Map<String, Object>> list = new LinkedList<>();

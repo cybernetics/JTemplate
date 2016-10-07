@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="jtemplate-examples" default="build">
+    <property file="build.properties"/>
+    
+    <property name="src" value="src"/>
+    <property name="api" value="api"/>
+    <property name="lib" value="lib"/>
+    <property name="bin" value="bin"/>
+    
+    <property name="warfile" value="${ant.project.name}.war"/>
+    
+    <target name="build">
+        <ant dir="../jtemplate" target="build" inheritAll="false"/>
+        
+        <echo message="Building ${title}..."/>
+        
+        <delete dir="${bin}"/>
+        <mkdir dir="${bin}"/>
+        
+        <javac srcDir="${src}" destDir="${bin}"
+            includejavaruntime="true" includeantruntime="true"
+            encoding="UTF-8" deprecation="true" debug="true"
+            failonerror="true">
+            <classpath>
+                <fileset dir="${api}" includes="**/*.jar"/>
+
+                <fileset dir="../jtemplate" includes="*.jar"/>
+
+                <fileset dir="${lib}">
+                    <include name="hibernate-core-*.jar"/>
+                    <include name="mongo-java-driver-*.jar"/>
+                </fileset>
+            </classpath>
+        </javac>
+        
+        <delete dir="." includes="${warfile}"/>
+        
+        <war destfile="${warfile}" webxml="web.xml">
+            <fileset dir="web"/>
+            
+            <classes dir="${bin}"/>
+            <classes dir="${src}" excludes="**/*.java"/>
+
+            <lib dir="../jtemplate" includes="*.jar"/>
+            
+            <lib dir="${lib}" includes="*.jar"/>
+        </war>
+	</target>
+</project>
