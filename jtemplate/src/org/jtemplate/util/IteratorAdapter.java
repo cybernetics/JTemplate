@@ -14,15 +14,13 @@
 
 package org.jtemplate.util;
 
-import java.util.AbstractList;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Class that presents the contents of an iterator as an iterable list of
  * values.
  */
-public class IteratorAdapter extends AbstractList<Object> {
+public class IteratorAdapter implements Iterable<Object> {
     private Iterator<?> iterator;
 
     /**
@@ -37,16 +35,6 @@ public class IteratorAdapter extends AbstractList<Object> {
         }
 
         this.iterator = iterator;
-    }
-
-    @Override
-    public Map<String, Object> get(int index) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int size() {
-        throw new UnsupportedOperationException();
     }
 
     @Override

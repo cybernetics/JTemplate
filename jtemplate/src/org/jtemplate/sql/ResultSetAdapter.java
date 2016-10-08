@@ -17,7 +17,6 @@ package org.jtemplate.sql;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -29,7 +28,7 @@ import java.util.NoSuchElementException;
  * maps. If a column's label contains a period, the value will be returned as a
  * nested structure.
  */
-public class ResultSetAdapter extends AbstractList<Map<String, Object>> {
+public class ResultSetAdapter implements Iterable<Map<String, Object>> {
     private ResultSet resultSet;
     private ArrayList<String[]> columns;
 
@@ -59,16 +58,6 @@ public class ResultSetAdapter extends AbstractList<Map<String, Object>> {
         } catch (SQLException exception) {
             throw new RuntimeException(exception);
         }
-    }
-
-    @Override
-    public Map<String, Object> get(int index) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int size() {
-        throw new UnsupportedOperationException();
     }
 
     @Override

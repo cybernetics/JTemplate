@@ -260,11 +260,11 @@ public class TemplateEncoder {
                                 value = Collections.emptyList();
                             }
 
-                            if (!(value instanceof List<?>)) {
+                            if (!(value instanceof Iterable<?>)) {
                                 throw new IOException("Invalid section element.");
                             }
 
-                            Iterator<?> iterator = ((List<?>)value).iterator();
+                            Iterator<?> iterator = ((Iterable<?>)value).iterator();
 
                             if (iterator.hasNext()) {
                                 includes = new HashMap<>();

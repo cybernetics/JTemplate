@@ -15,6 +15,7 @@
 package org.jtemplate.examples.hibernate;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
@@ -35,11 +36,19 @@ public class EventServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Class<?> type = getClass();
         String servletPath = request.getServletPath();
+
+        URL url = type.getResource(servletPath.substring(1));
+
+        if (url == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
         response.setContentType(getServletContext().getMimeType(servletPath));
 
-        Class<?> type = getClass();
-        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
+        TemplateEncoder templateEncoder = new TemplateEncoder(url, type.getName());
 
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
 
