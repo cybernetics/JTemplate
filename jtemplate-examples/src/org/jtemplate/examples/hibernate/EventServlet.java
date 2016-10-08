@@ -54,7 +54,7 @@ public class EventServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
 
         try (Session session = sessionFactory.openSession()) {
