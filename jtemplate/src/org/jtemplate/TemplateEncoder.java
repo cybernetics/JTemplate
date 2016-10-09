@@ -252,6 +252,17 @@ public class TemplateEncoder {
 
                     switch (markerType) {
                         case SECTION_START: {
+                            int i = marker.indexOf(":");
+
+                            String separator;
+                            if (i != -1) {
+                                separator = marker.substring(i + 1);
+
+                                marker = marker.substring(0, i);
+                            } else {
+                                separator = null;
+                            }
+
                             history.push(includes);
 
                             Object value = dictionary.get(marker);
@@ -269,6 +280,8 @@ public class TemplateEncoder {
                             if (iterator.hasNext()) {
                                 includes = new HashMap<>();
 
+                                int j = 0;
+
                                 while (iterator.hasNext()) {
                                     Object element = iterator.next();
 
@@ -276,11 +289,17 @@ public class TemplateEncoder {
                                         reader.mark(0);
                                     }
 
+                                    if (j > 0 && separator != null) {
+                                        writer.append(separator);
+                                    }
+
                                     writeRoot(element, writer, locale, reader);
 
                                     if (iterator.hasNext()) {
                                         reader.reset();
                                     }
+
+                                    j++;
                                 }
                             } else {
                                 includes = new AbstractMap<String, Reader>() {
