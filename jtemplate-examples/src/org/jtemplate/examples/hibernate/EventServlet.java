@@ -38,7 +38,7 @@ public class EventServlet extends HttpServlet {
         Class<?> type = getClass();
         String servletPath = request.getServletPath();
 
-        response.setContentType(getServletContext().getMimeType(servletPath));
+        response.setContentType(getServletContext().getMimeType(servletPath) + ";charset=UTF-8");
 
         TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
 
