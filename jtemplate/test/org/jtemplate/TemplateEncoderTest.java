@@ -215,6 +215,21 @@ public class TemplateEncoderTest {
     }
 
     @Test
+    public void testSectionSeparator() throws IOException {
+        TemplateEncoder encoder = new TemplateEncoder(getClass().getResource("section5.txt"));
+
+        List<?> value = listOf("a", "b", "c");
+
+        String result;
+        try (StringWriter writer = new StringWriter()) {
+            encoder.writeValue(value, writer);
+            result = writer.toString();
+        }
+
+        Assert.assertEquals("a,b,c", result);
+    }
+
+    @Test
     public void testComment() throws IOException {
         TemplateEncoder encoder = new TemplateEncoder(getClass().getResource("comment.txt"));
 

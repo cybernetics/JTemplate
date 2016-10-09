@@ -252,15 +252,18 @@ public class TemplateEncoder {
 
                     switch (markerType) {
                         case SECTION_START: {
-                            int i = marker.indexOf(":");
+                            String separator = null;
 
-                            String separator;
-                            if (i != -1) {
-                                separator = marker.substring(i + 1);
+                            int n = marker.length();
 
-                                marker = marker.substring(0, i);
-                            } else {
-                                separator = null;
+                            if (marker.charAt(n - 1) == ']') {
+                                int i = marker.lastIndexOf('[');
+
+                                if (i != -1) {
+                                    separator = marker.substring(i + 1, n - 1);
+
+                                    marker = marker.substring(0, i);
+                                }
                             }
 
                             history.push(includes);
@@ -280,7 +283,7 @@ public class TemplateEncoder {
                             if (iterator.hasNext()) {
                                 includes = new HashMap<>();
 
-                                int j = 0;
+                                int i = 0;
 
                                 while (iterator.hasNext()) {
                                     Object element = iterator.next();
@@ -289,7 +292,7 @@ public class TemplateEncoder {
                                         reader.mark(0);
                                     }
 
-                                    if (j > 0 && separator != null) {
+                                    if (i > 0 && separator != null) {
                                         writer.append(separator);
                                     }
 
@@ -299,7 +302,7 @@ public class TemplateEncoder {
                                         reader.reset();
                                     }
 
-                                    j++;
+                                    i++;
                                 }
                             } else {
                                 includes = new AbstractMap<String, Reader>() {
