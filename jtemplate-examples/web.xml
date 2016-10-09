@@ -4,56 +4,5 @@
     xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
     version="3.1">
     <display-name>JTemplate Examples</display-name>
-
-    <listener>
-        <listener-class>org.jtemplate.examples.hibernate.HibernateSessionFactoryManager</listener-class>
-    </listener>
-
-    <listener>
-        <listener-class>org.jtemplate.examples.mongodb.MongoClientManager</listener-class>
-    </listener>
-
-    <servlet>
-        <servlet-name>PetServlet</servlet-name>
-        <servlet-class>org.jtemplate.examples.mysql.PetServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-
-    <servlet>
-        <servlet-name>EventServlet</servlet-name>
-        <servlet-class>org.jtemplate.examples.hibernate.EventServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-
-    <servlet>
-        <servlet-name>RestaurantServlet</servlet-name>
-        <servlet-class>org.jtemplate.examples.mongodb.RestaurantServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-
-    <servlet-mapping>
-        <servlet-name>PetServlet</servlet-name>
-        <url-pattern>/pets.csv</url-pattern>
-        <url-pattern>/pets.html</url-pattern>
-        <url-pattern>/pets.json</url-pattern>
-        <url-pattern>/pets.xml</url-pattern>
-    </servlet-mapping>    
-
-    <servlet-mapping>
-        <servlet-name>EventServlet</servlet-name>
-        <url-pattern>/events/*</url-pattern>
-        <url-pattern>/events.csv</url-pattern>
-        <url-pattern>/events.html</url-pattern>
-        <url-pattern>/events.json</url-pattern>
-        <url-pattern>/events.xml</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>RestaurantServlet</servlet-name>
-        <url-pattern>/restaurants.csv</url-pattern>
-        <url-pattern>/restaurants.html</url-pattern>
-        <url-pattern>/restaurants.json</url-pattern>
-        <url-pattern>/restaurants.xml</url-pattern>
-    </servlet-mapping>
 </web-app>
 

@@ -16,6 +16,8 @@ package org.jtemplate.examples.mongodb;
 
 import java.io.IOException;
 
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,6 +33,13 @@ import com.mongodb.client.MongoDatabase;
 /**
  * Restaurant service.
  */
+@WebServlet(urlPatterns={
+    "/restaurants.csv",
+    "/restaurants.html",
+    "/restaurants.json",
+    "/restaurants.xml"
+}, loadOnStartup=1)
+@MultipartConfig
 public class RestaurantServlet extends HttpServlet {
     private static final long serialVersionUID = 0;
 

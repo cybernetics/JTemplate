@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,6 +32,14 @@ import org.jtemplate.beans.BeanAdapter;
 /**
  * Event servlet.
  */
+@WebServlet(urlPatterns={
+    "/events/*",
+    "/events.csv",
+    "/events.html",
+    "/events.json",
+    "/events.xml"
+}, loadOnStartup=1)
+@MultipartConfig
 public class EventServlet extends HttpServlet {
     private static final long serialVersionUID = 0;
 

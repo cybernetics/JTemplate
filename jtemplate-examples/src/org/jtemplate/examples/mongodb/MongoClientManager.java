@@ -16,12 +16,14 @@ package org.jtemplate.examples.mongodb;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 
 import com.mongodb.MongoClient;
 
 /**
  * Mongo client manager.
  */
+@WebListener
 public class MongoClientManager implements ServletContextListener {
     private static MongoClient mongoClient = null;
 

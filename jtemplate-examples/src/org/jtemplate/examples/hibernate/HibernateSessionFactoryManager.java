@@ -16,6 +16,7 @@ package org.jtemplate.examples.hibernate;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
@@ -25,6 +26,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 /**
  * Hibernate session factory manager.
  */
+@WebListener
 public class HibernateSessionFactoryManager implements ServletContextListener {
     private static SessionFactory sessionFactory = null;
 
