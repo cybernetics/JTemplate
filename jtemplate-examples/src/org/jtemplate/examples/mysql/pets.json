@@ -1,0 +1,9 @@
+[
+  {{#.}}{
+    "name": "{{name:^json}}",
+    "species": "{{name:^json}}",
+    "sex": "{{name:^json}}",
+    "birth": "{{birth:format=mediumDate:^json}}"
+  }
+  {{/.}}
+]

@@ -15,7 +15,6 @@
 package org.jtemplate.examples.hibernate;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
@@ -39,16 +38,9 @@ public class EventServlet extends HttpServlet {
         Class<?> type = getClass();
         String servletPath = request.getServletPath();
 
-        URL url = type.getResource(servletPath.substring(1));
-
-        if (url == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
         response.setContentType(getServletContext().getMimeType(servletPath));
 
-        TemplateEncoder templateEncoder = new TemplateEncoder(url, type.getName());
+        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
 
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
 

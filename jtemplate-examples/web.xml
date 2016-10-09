@@ -33,7 +33,10 @@
 
     <servlet-mapping>
         <servlet-name>PetServlet</servlet-name>
+        <url-pattern>/pets.csv</url-pattern>
         <url-pattern>/pets.html</url-pattern>
+        <url-pattern>/pets.json</url-pattern>
+        <url-pattern>/pets.xml</url-pattern>
     </servlet-mapping>    
 
     <servlet-mapping>

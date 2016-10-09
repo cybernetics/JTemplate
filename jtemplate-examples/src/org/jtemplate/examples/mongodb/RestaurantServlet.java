@@ -15,7 +15,6 @@
 package org.jtemplate.examples.mongodb;
 
 import java.io.IOException;
-import java.net.URL;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -40,16 +39,9 @@ public class RestaurantServlet extends HttpServlet {
         Class<?> type = getClass();
         String servletPath = request.getServletPath();
 
-        URL url = type.getResource(servletPath.substring(1));
-
-        if (url == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
         response.setContentType(getServletContext().getMimeType(servletPath));
 
-        TemplateEncoder templateEncoder = new TemplateEncoder(url, type.getName());
+        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
 
         MongoDatabase db = MongoClientManager.getMongoClient().getDatabase("test");
 

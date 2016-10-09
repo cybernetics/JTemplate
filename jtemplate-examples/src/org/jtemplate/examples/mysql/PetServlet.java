@@ -15,7 +15,6 @@
 package org.jtemplate.examples.mysql;
 
 import java.io.IOException;
-import java.net.URL;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -53,16 +52,9 @@ public class PetServlet extends HttpServlet {
         Class<?> type = getClass();
         String servletPath = request.getServletPath();
 
-        URL url = type.getResource(servletPath.substring(1));
-
-        if (url == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
         response.setContentType(getServletContext().getMimeType(servletPath));
 
-        TemplateEncoder templateEncoder = new TemplateEncoder(url, type.getName());
+        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
 
         Parameters parameters = Parameters.parse("select name, species, sex, birth from pet where owner = :owner");
 
