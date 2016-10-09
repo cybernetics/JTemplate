@@ -256,7 +256,7 @@ public class TemplateEncoderTest {
     }
 
     @Test
-    public void testDateFormatModifier() throws IOException {
+    public void testDateFormatModifiers() throws IOException {
         TemplateEncoder encoder = new TemplateEncoder(getClass().getResource("format2.txt"));
 
         Date date = new Date();
@@ -279,6 +279,32 @@ public class TemplateEncoderTest {
             + "," + localDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
             + "," + localTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
             + "," + localDateTime.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)), result);
+    }
+
+    @Test
+    public void testISODateFormatModifiers() throws IOException {
+        TemplateEncoder encoder = new TemplateEncoder(getClass().getResource("format3.txt"));
+
+        Date date = new Date();
+        LocalDate localDate = LocalDate.now();
+        LocalTime localTime = LocalTime.now();
+        LocalDateTime localDateTime = LocalDateTime.now();
+
+        String result;
+        try (StringWriter writer = new StringWriter()) {
+            encoder.writeValue(mapOf(
+                entry("date", date),
+                entry("localDate", localDate),
+                entry("localTime", localTime),
+                entry("localDateTime", localDateTime)
+            ), writer);
+            result = writer.toString();
+        }
+
+        Assert.assertEquals(date.getTime()
+            + "," + localDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            + "," + localTime.format(DateTimeFormatter.ISO_LOCAL_TIME)
+            + "," + localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), result);
     }
 
     @Test
