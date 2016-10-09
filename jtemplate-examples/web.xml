@@ -42,12 +42,18 @@
     <servlet-mapping>
         <servlet-name>EventServlet</servlet-name>
         <url-pattern>/events/*</url-pattern>
+        <url-pattern>/events.csv</url-pattern>
         <url-pattern>/events.html</url-pattern>
+        <url-pattern>/events.json</url-pattern>
+        <url-pattern>/events.xml</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>RestaurantServlet</servlet-name>
+        <url-pattern>/restaurants.csv</url-pattern>
         <url-pattern>/restaurants.html</url-pattern>
+        <url-pattern>/restaurants.json</url-pattern>
+        <url-pattern>/restaurants.xml</url-pattern>
     </servlet-mapping>
 </web-app>
 

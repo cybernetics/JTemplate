@@ -1,18 +1,18 @@
 <html>
 <head>
-<title>{{@restaurants}}</title>
+<title>{{@restaurants:^html}}</title>
 </head>
 <body>
 {{#.}}
 <p>
-<strong>{{name}}</strong></em><br/>
-{{address.building}} {{address.street}}, {{borough}}<br/>
+<strong>{{name:^html}}</strong></em><br/>
+{{address.building:^html}} {{address.street:^html}}, {{borough:^html}}<br/>
 </p>
-<p>{{@cuisine}}: <em>{{cuisine}}</em></p>
-<p>{{@grades}}:</p>
+<p>{{@cuisine:^html}}: <em>{{cuisine:^html}}</em></p>
+<p>{{@grades:^html}}:</p>
 <ul>
 {{#grades}}
-<li>{{date:format=mediumDate}} {{grade}} (<em>{{score}}</em>)</li>
+<li>{{date:format=mediumDate:^html}} {{grade:^html}} (<em>{{score:^html}}</em>)</li>
 {{/grades}}
 </ul>
 {{/.}}

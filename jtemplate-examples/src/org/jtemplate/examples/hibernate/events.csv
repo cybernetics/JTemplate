@@ -1,0 +1,3 @@
+title,date
+{{#.}}"{{title:^csv}}","{{date:format=shortDate:^csv}}"
+{{/.}}

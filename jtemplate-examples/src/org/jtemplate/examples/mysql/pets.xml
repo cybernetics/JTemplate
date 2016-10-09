@@ -5,6 +5,6 @@
     <name>{{name:^xml}}</name>
     <species>{{species:^xml}}</species>
     <sex>{{sex:^xml}}</sex>
-    <birth>{{birth:format=mediumDate:^xml}}</birth>
+    <birth>{{birth:format=shortDate:^xml}}</birth>
   </pet>{{/.}}
 </pets>

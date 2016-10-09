@@ -1,12 +1,12 @@
 <html>
 <head>
-<title>{{@events}}</title>
+<title>{{@events:^html}}</title>
 </head>
 <body>
 {{#.}}
 <p>
-{{@title}}: {{title}}<br/>
-{{@date}}: {{date:format=mediumDate}}</p>
+{{@title}}: {{title:^html}}<br/>
+{{@date}}: {{date:format=mediumDate:^html}}</p>
 {{/.}}
 </body>
 </html>
