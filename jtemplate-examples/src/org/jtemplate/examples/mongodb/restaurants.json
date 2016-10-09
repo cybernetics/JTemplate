@@ -9,7 +9,7 @@
     "cuisine": "{{cuisine:^json}}",
     "grades": [{{#grades[,]}}
       {
-        "date": "{{date:format=shortDate:^json}}",
+        "date": {{date:format=time}},
         "grade": "{{grade:^json}}",
         "score": {{score:^json}}
       }{{/grades}}

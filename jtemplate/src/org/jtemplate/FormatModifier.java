@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Date;
 import java.util.Locale;
 
 /**
@@ -40,6 +41,12 @@ public class FormatModifier implements Modifier {
 
                 case "percent": {
                     result = NumberFormat.getPercentInstance(locale).format(value);
+
+                    break;
+                }
+
+                case "time": {
+                    result = ((Date)value).getTime();
 
                     break;
                 }
@@ -84,6 +91,12 @@ public class FormatModifier implements Modifier {
                     break;
                 }
 
+                case "isoLocalDate": {
+                    result = ((LocalDate)value).format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+                    break;
+                }
+
                 case "fullTime": {
                     if (value instanceof LocalTime) {
                         result = ((LocalTime)value).format(DateTimeFormatter.ofLocalizedTime(FormatStyle.FULL).withLocale(locale));
@@ -124,6 +137,12 @@ public class FormatModifier implements Modifier {
                     break;
                 }
 
+                case "isoLocalTime": {
+                    result = ((LocalTime)value).format(DateTimeFormatter.ISO_LOCAL_TIME);
+
+                    break;
+                }
+
                 case "fullDateTime": {
                     if (value instanceof LocalDateTime) {
                         result = ((LocalDateTime)value).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL).withLocale(locale));
@@ -160,6 +179,12 @@ public class FormatModifier implements Modifier {
                     } else {
                         result = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale).format(value);
                     }
+
+                    break;
+                }
+
+                case "isoLocalDateTime": {
+                    result = ((LocalDateTime)value).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
                     break;
                 }
