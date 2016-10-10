@@ -27,11 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.jtemplate.TemplateEncoder;
-import org.jtemplate.sql.Parameters;
 import org.jtemplate.sql.ResultSetAdapter;
-
-import static org.jtemplate.TemplateEncoder.mapOf;
-import static org.jtemplate.TemplateEncoder.entry;
 
 /**
  * Pet servlet.
@@ -65,10 +61,10 @@ public class PetServlet extends HttpServlet {
 
         TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
 
-        Parameters parameters = Parameters.parse("select name, species, sex, birth from pet where owner = :owner");
+        String sql = "select name, species, sex, birth from pet where owner = ?";
 
-        try (PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(parameters.getSQL())) {
-            parameters.apply(statement, mapOf(entry("owner", request.getParameter("owner"))));
+        try (PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(sql)) {
+            statement.setString(1, request.getParameter("owner"));
 
             templateEncoder.writeValue(new ResultSetAdapter(statement.executeQuery()), response.getOutputStream());
         } catch (SQLException exception) {

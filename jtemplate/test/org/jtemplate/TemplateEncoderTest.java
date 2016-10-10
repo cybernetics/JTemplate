@@ -32,11 +32,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.jtemplate.TemplateEncoder.listOf;
-import static org.jtemplate.TemplateEncoder.mapOf;
-import static org.jtemplate.TemplateEncoder.entry;
-
-public class TemplateEncoderTest {
+public class TemplateEncoderTest extends AbstractTest {
     @BeforeClass
     public static void setup() {
         TemplateEncoder.getModifiers().put("case", new CaseModifier());

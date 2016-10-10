@@ -18,14 +18,11 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.jtemplate.AbstractTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.jtemplate.TemplateEncoder.listOf;
-import static org.jtemplate.TemplateEncoder.mapOf;
-import static org.jtemplate.TemplateEncoder.entry;
-
-public class IteratorAdapterTest {
+public class IteratorAdapterTest extends AbstractTest {
     @Test
     public void testIteratorAdapter1() throws Exception {
         List<?> list1 = listOf(2L, 4.0, "abc", true, new Date(0));
