@@ -2,11 +2,11 @@
 JTemplate is an open-source implementation of the [CTemplate](https://github.com/OlafvdSpek/ctemplate) templating system in Java.
 
 # Contents
-* [Template Syntax](#template-overview)
+* [Template Syntax](#template-syntax)
 * [Implementation](#implementation)
 * [Additional Information](#additional-information)
 
-## Template Syntax
+# Template Syntax
 Templates are a means of separating data from presentation. They describe an output format such as HTML, XML, or CSV, and allow the ultimate representation of data structure to be specified independently of the data itself, promoting a clear separation of responsibility.
 
 The CTemplate system defines a set of "markers" that are replaced with values supplied by a data structure (which CTemplate calls a "data dictionary") when a template is processed. The following CTemplate marker types are supported by JTemplate:
@@ -52,7 +52,7 @@ At execution time, the "count", "sum", and "average" markers are replaced by the
 
 Each marker type is discussed in more detail below.
 
-### Variable Markers
+## Variable Markers
 Variable markers inject a variable from the data dictionary into the output. For example:
 
     <p>Count: {{count}}</p>
@@ -61,12 +61,12 @@ Variable markers inject a variable from the data dictionary into the output. For
 
 Nested values can be referred to using dot-separated path notation; e.g. "name.first". Missing (i.e. `null`) values are replaced with the empty string in the generated output. 
 
-#### Dot Notation
+### Dot Notation
 Non-map values are automatically wrapped in a map instance and assigned a default name of ".". This name can be used to refer to the value in a template. For example, the following variable marker simply echoes a value: 
 
 	The value is {{.}}.
 
-#### Resource References
+### Resource References
 Variable names beginning with the `@` character represent "resource references". Resources allow static template content to be localized. For example, the descriptive text from the statistics template might be localized as follows:
 
     title=Statistics
@@ -89,12 +89,12 @@ The template could be updated to refer to the localized values as shown below:
 
 When the template is processed, the resource references will be replaced with the corresponding values from the resource bundle.
 
-#### Context References
+### Context References
 Variable names beginning with the `$` character represent "context references". They can be used to provide additional information to a template that is not included in the data dictionary. For example, if the template context contains a value named "currentDate", the following template could be used to inject the date into the output:
 
     <p>{{$currentDate}}</p>
 
-#### Modifiers
+### Modifiers
 The CTemplate specification defines a syntax for applying an optional set of "modifiers" to a variable. Modifiers are used to transform a variable's representation before it is written to the output stream; for example, to apply an escape sequence.
 
 Modifiers are specified as shown below. They are invoked in order from left to right. An optional argument value may be included to provide additional information to the modifier:
@@ -140,7 +140,7 @@ For example, this marker applies a medium date format to a date value named "dat
 
 Applications may also define their own custom modifiers. This is discussed in more detail later.
 
-### Section Markers
+## Section Markers
 Section markers define a repeating section of content. The marker name must refer to an iterable value in the data dictionary (for example, an instance of `java.util.List`). Content between the markers is repeated once for each element in the collection. The element provides the data dictionary for each successive iteration through the section. If the iterable value is missing (i.e. `null`) or empty, the section's content is excluded from the output.
 
 For example, a data dictionary that contains information about homes for sale might look like this:
@@ -189,14 +189,14 @@ A template to present these results in an HTML table is shown below. The `format
     </body>
     </html>
 
-#### Dot Notation
+### Dot Notation
 Dot notation can also be used with section markers. For example:
 
     {{#.}}
     ...
     {{/}}
 
-#### Separators
+### Separators
 Section markers may specify an optional separator string that will be automatically injected between the output of the section's elements. The separator text is enclosed in square brackets immediately following the section name. 
 
 For example, the elements of the "addresses" section specified below will be separated by a comma in the generated output:
@@ -205,7 +205,7 @@ For example, the elements of the "addresses" section specified below will be sep
     ...
     {{/addresses}}
 
-### Includes
+## Includes
 Include markers import content defined by another template. They can be used to create reusable content modules; for example, document headers and footers.
 
 For example, the following template, _hello.txt_, includes another document named _world.txt_: 
@@ -220,13 +220,13 @@ Includes inherit their context from the parent document, so they can refer to el
 
 Includes can also be used to facilitate recursion. For example, an include that includes itself can be used to transform the contents of a hierarchical data structure.
 
-### Comments
+## Comments
 Comment markers provide informational text about a template's content. They are not included in the final output. For example, when the following template is processed, only the content between the `<p>` tags will be included:
 
     {{! Some placeholder text }}
     <p>Lorem ipsum dolor sit amet.</p>
 
-## Implementation
+# Implementation
 JTemplate is distributed as a JAR file that contains the following types, discussed in more detail below:
 
 * `org.jtemplate`
@@ -241,7 +241,7 @@ JTemplate is distributed as a JAR file that contains the following types, discus
 
 The JAR file can be downloaded [here](https://github.com/gk-brown/JTemplate/releases). Java 8 or later is required.
 
-### TemplateEncoder Class
+## TemplateEncoder Class
 The `TemplateEncoder` class is responsible for merging a template document with a data dictionary. It provides the following constructors:
 
     public TemplateEncoder(URL url) { ... }
@@ -289,7 +289,7 @@ the code would produce the following output:
 
     a = hello, b = 123, c = true
     
-### Custom Modifiers 
+## Custom Modifiers 
 Modifiers are created by implementing the `Modifier` interface, which defines the following method:
 
     public Object apply(Object value, String argument, Locale locale);
@@ -311,7 +311,7 @@ Custom modifiers are registered by adding them to the modifier map returned by `
 
 Note that modifiers must be thread-safe, since they are shared and may be invoked concurrently by multiple encoder instances.
 
-### BeanAdapter Class
+## BeanAdapter Class
 The `BeanAdapter` class implements the `Map` interface and exposes any properties defined by the Bean as entries in the map, allowing custom data types to be used in a data dictionary.
 
 For example, the following Bean class might be used to represent the simple statistical data discussed earlier:
@@ -375,7 +375,7 @@ An example that uses `BeanAdapter` to apply a template to a `Statistics` instanc
 
 Note that, if a property returns a nested Bean type, the property's value will be automatically wrapped in a `BeanAdapter` instance. Additionally, if a property returns a `List` or `Map` type, the value will be wrapped in an adapter of the appropriate type that automatically adapts its sub-elements.
 
-### ResultSetAdapter Class
+## ResultSetAdapter Class
 The `ResultSetAdapter` class implements the `Iterable` interface and makes each row in a JDBC result set appear as an instance of `Map`, allowing the query results to be used in a data dictionary. For example:
 
     String sql = "select name, species, sex, birth from pet";
@@ -391,7 +391,7 @@ The `ResultSetAdapter` class implements the `Iterable` interface and makes each 
     
     System.out.println(result);
 
-#### Nested Structures
+### Nested Structures
 If a column's label contains a period, the value will be returned as a nested structure. For example, the following query might be used to retrieve a list of employee records:
 
     SELECT first_name AS 'name.first', last_name AS 'name.last', title FROM employees
@@ -409,7 +409,7 @@ Because the aliases for the `first_name` and `last_name` columns contain a perio
       ...
     ]
 
-### IteratorAdapter Class
+## IteratorAdapter Class
 The `IteratorAdapter` class implements the `Iterable` interface and makes each item produced by an iterator appear to be an element of the adapter, allowing the iterator's contents to be used in a data dictionary.
 
 `IteratorAdapter` is typically used to transform result data produced by NoSQL databases such as MongoDB. It can also be used to transform the result of stream operations on Java collection types. For example:
