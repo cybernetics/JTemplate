@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AbstractTest {
+public abstract class AbstractTest {
     @SafeVarargs
     public static List<?> listOf(Object...elements) {
         return Collections.unmodifiableList(Arrays.asList(elements));
