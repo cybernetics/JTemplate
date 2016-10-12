@@ -1,5 +1,5 @@
 # Introduction
-JTemplate is an open-source implementation of the [CTemplate](https://github.com/OlafvdSpek/ctemplate) templating system in Java.
+JTemplate is an open-source implementation of the [CTemplate](https://github.com/OlafvdSpek/ctemplate) templating system (aka "Mustache") in Java.
 
 # Contents
 * [Template Syntax](#template-syntax)
