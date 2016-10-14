@@ -28,21 +28,22 @@ public class ResultSetAdapterTest extends AbstractTest {
     public void testResultSetAdapter() throws SQLException {
         LinkedList<Map<String, Object>> list = new LinkedList<>();
 
-        try (TestResultSet resultSet = new TestResultSet()) {
-            ResultSetAdapter adapter = new ResultSetAdapter(resultSet);
+        TestResultSet resultSet = new TestResultSet();
 
+        try (ResultSetAdapter adapter = new ResultSetAdapter(resultSet)) {
             for (Map<String, Object> row : adapter) {
                 list.add(row);
             }
-
-            Assert.assertEquals(listOf(mapOf(
-                entry("a", 2L),
-                entry("b", 4.0),
-                entry("c", "abc"),
-                entry("d", true),
-                entry("e", new Date(0)),
-                entry("f", mapOf(entry("g", mapOf(entry("h", "hello")))))
-            )), list);
         }
+
+        Assert.assertTrue(resultSet.isClosed());
+        Assert.assertEquals(listOf(mapOf(
+            entry("a", 2L),
+            entry("b", 4.0),
+            entry("c", "abc"),
+            entry("d", true),
+            entry("e", new Date(0)),
+            entry("f", mapOf(entry("g", mapOf(entry("h", "hello")))))
+        )), list);
     }
 }

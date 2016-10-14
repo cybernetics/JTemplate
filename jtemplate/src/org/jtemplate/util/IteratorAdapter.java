@@ -19,8 +19,11 @@ import java.util.Iterator;
 /**
  * Class that presents the contents of an iterator as an iterable list of
  * values.
+ *
+ * If the iterator's type implements {@link AutoCloseable}, it will be
+ * automatically closed when the adapter is closed.
  */
-public class IteratorAdapter implements Iterable<Object> {
+public class IteratorAdapter implements Iterable<Object>, AutoCloseable {
     private Iterator<?> iterator;
 
     /**
@@ -35,6 +38,13 @@ public class IteratorAdapter implements Iterable<Object> {
         }
 
         this.iterator = iterator;
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (iterator instanceof AutoCloseable) {
+            ((AutoCloseable)iterator).close();
+        }
     }
 
     @Override

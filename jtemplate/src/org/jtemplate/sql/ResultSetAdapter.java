@@ -14,9 +14,11 @@
 
 package org.jtemplate.sql;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -27,8 +29,11 @@ import java.util.NoSuchElementException;
  * Class that presents the contents of a JDBC result set as an iterable list of
  * maps. If a column's label contains a period, the value will be returned as a
  * nested structure.
+ *
+ * Closing the adapter closes the underlying result set, statement, and
+ * connection.
  */
-public class ResultSetAdapter implements Iterable<Map<String, Object>> {
+public class ResultSetAdapter implements Iterable<Map<String, Object>>, AutoCloseable {
     private ResultSet resultSet;
     private ArrayList<String[]> columns;
 
@@ -57,6 +62,25 @@ public class ResultSetAdapter implements Iterable<Map<String, Object>> {
             }
         } catch (SQLException exception) {
             throw new RuntimeException(exception);
+        }
+    }
+
+    @Override
+    public void close() throws SQLException {
+        Statement statement = resultSet.getStatement();
+
+        try {
+            resultSet.close();
+        } finally {
+            if (statement != null) {
+                Connection connection = statement.getConnection();
+
+                try {
+                    statement.close();
+                } finally {
+                    connection.close();
+                }
+            }
         }
     }
 

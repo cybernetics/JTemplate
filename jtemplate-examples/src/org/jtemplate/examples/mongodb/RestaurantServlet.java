@@ -16,6 +16,7 @@ package org.jtemplate.examples.mongodb;
 
 import java.io.IOException;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -27,7 +28,6 @@ import org.jtemplate.TemplateEncoder;
 import org.jtemplate.util.IteratorAdapter;
 
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -44,7 +44,7 @@ public class RestaurantServlet extends HttpServlet {
     private static final long serialVersionUID = 0;
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Class<?> type = getClass();
         String servletPath = request.getServletPath();
 
@@ -56,8 +56,10 @@ public class RestaurantServlet extends HttpServlet {
 
         FindIterable<Document> iterable = db.getCollection("restaurants").find(new Document("address.zipcode", request.getParameter("zipCode")));
 
-        try (MongoCursor<Document> cursor = iterable.iterator()) {
-            templateEncoder.writeValue(new IteratorAdapter(cursor), response.getOutputStream());
+        try (IteratorAdapter iteratorAdapter = new IteratorAdapter(iterable.iterator())) {
+            templateEncoder.writeValue(iteratorAdapter, response.getOutputStream());
+        } catch (Exception exception) {
+            throw new ServletException(exception);
         }
     }
 }

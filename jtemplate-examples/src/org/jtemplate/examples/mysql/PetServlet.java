@@ -63,10 +63,14 @@ public class PetServlet extends HttpServlet {
 
         String sql = "select name, species, sex, birth from pet where owner = ?";
 
-        try (PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(sql)) {
+        try {
+            PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(sql);
+
             statement.setString(1, request.getParameter("owner"));
 
-            templateEncoder.writeValue(new ResultSetAdapter(statement.executeQuery()), response.getOutputStream());
+            try (ResultSetAdapter resultSetAdapter = new ResultSetAdapter(statement.executeQuery())){
+                templateEncoder.writeValue(resultSetAdapter, response.getOutputStream());
+            }
         } catch (SQLException exception) {
             throw new ServletException(exception);
         }
