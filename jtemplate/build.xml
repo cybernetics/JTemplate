@@ -44,7 +44,11 @@
         
         <javadoc sourcepath="${src}" destdir="${doc}"
             link="http://docs.oracle.com/javase/8/docs/api/"
-            version="true" use="true"/>
+            version="true" use="true">
+            <classpath>
+                <fileset dir="${api}" includes="**/*.jar"/>
+            </classpath>
+        </javadoc>
 
         <delete dir="." includes="${docfile}"/>
 
