@@ -22,11 +22,12 @@ import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.jtemplate.DispatcherServlet;
 import org.jtemplate.TemplateEncoder;
+import org.jtemplate.sql.Parameters;
 import org.jtemplate.sql.ResultSetAdapter;
 
 /**
@@ -39,7 +40,7 @@ import org.jtemplate.sql.ResultSetAdapter;
     "/pets.xml"
 }, loadOnStartup=1)
 @MultipartConfig
-public class PetServlet extends HttpServlet {
+public class PetServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
     private static final String DB_URL = "jdbc:mysql://db.local:3306/menagerie?user=root&password=password";
@@ -61,12 +62,12 @@ public class PetServlet extends HttpServlet {
 
         TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
 
-        String sql = "select name, species, sex, birth from pet where owner = ?";
+        Parameters parameters = Parameters.parse("select name, species, sex, birth from pet where owner = :owner");
 
         try {
-            PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(sql);
+            PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(parameters.getSQL());
 
-            statement.setString(1, request.getParameter("owner"));
+            parameters.apply(statement, mapOf(entry("owner", request.getParameter("owner"))));
 
             try (ResultSetAdapter resultSetAdapter = new ResultSetAdapter(statement.executeQuery())){
                 templateEncoder.writeValue(resultSetAdapter, response.getOutputStream());

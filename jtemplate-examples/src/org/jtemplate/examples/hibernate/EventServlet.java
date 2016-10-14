@@ -20,12 +20,12 @@ import java.util.List;
 
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.jtemplate.DispatcherServlet;
 import org.jtemplate.TemplateEncoder;
 import org.jtemplate.beans.BeanAdapter;
 
@@ -40,7 +40,7 @@ import org.jtemplate.beans.BeanAdapter;
     "/events.xml"
 }, loadOnStartup=1)
 @MultipartConfig
-public class EventServlet extends HttpServlet {
+public class EventServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
     @Override
