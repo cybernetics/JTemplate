@@ -153,9 +153,9 @@ public class TestResultSet implements ResultSet {
         }
     };
 
-    private String[] labels = {"a", "b", "c", "d", "e", "f.g", "f.g.h"};
+    private String[] labels = {"a", "b", "c", "d", "e"};
 
-    private Object[] values = {2L, 4.0, "abc", true, new Date(0), "xyz", "hello"};
+    private Object[] values = {2L, 4.0, "abc", true, new Date(0)};
 
     private boolean hasNext = true;
     private boolean closed = false;

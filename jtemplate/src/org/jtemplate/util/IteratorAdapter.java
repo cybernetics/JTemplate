@@ -18,10 +18,8 @@ import java.util.Iterator;
 
 /**
  * Class that presents the contents of an iterator as an iterable list of
- * values.
- *
- * If the iterator's type implements {@link AutoCloseable}, it will be
- * automatically closed when the adapter is closed.
+ * values. If the underlying iterator type implements {@link AutoCloseable},
+ * closing the adapter also closes the underlying cursor.
  */
 public class IteratorAdapter implements Iterable<Object>, AutoCloseable {
     private Iterator<?> iterator;

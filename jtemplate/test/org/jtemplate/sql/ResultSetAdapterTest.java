@@ -42,8 +42,7 @@ public class ResultSetAdapterTest extends AbstractTest {
             entry("b", 4.0),
             entry("c", "abc"),
             entry("d", true),
-            entry("e", new Date(0)),
-            entry("f", mapOf(entry("g", mapOf(entry("h", "hello")))))
+            entry("e", new Date(0))
         )), list);
     }
 }

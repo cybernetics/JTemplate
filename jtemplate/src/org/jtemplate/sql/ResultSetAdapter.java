@@ -19,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,15 +26,12 @@ import java.util.NoSuchElementException;
 
 /**
  * Class that presents the contents of a JDBC result set as an iterable list of
- * maps. If a column's label contains a period, the value will be returned as a
- * nested structure.
- *
- * Closing the adapter closes the underlying result set, statement, and
+ * maps. Closing the adapter closes the underlying result set, statement, and
  * connection.
  */
 public class ResultSetAdapter implements Iterable<Map<String, Object>>, AutoCloseable {
     private ResultSet resultSet;
-    private ArrayList<String[]> columns;
+    private ResultSetMetaData resultSetMetaData;
 
     /**
      * Creates a new result set adapter.
@@ -51,15 +47,7 @@ public class ResultSetAdapter implements Iterable<Map<String, Object>>, AutoClos
         this.resultSet = resultSet;
 
         try {
-            ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-
-            int n = resultSetMetaData.getColumnCount();
-
-            columns = new ArrayList<>(n);
-
-            for (int i = 0; i < n; i++) {
-                columns.add(resultSetMetaData.getColumnLabel(i + 1).split("\\."));
-            }
+            resultSetMetaData = resultSet.getMetaData();
         } catch (SQLException exception) {
             throw new RuntimeException(exception);
         }
@@ -103,7 +91,6 @@ public class ResultSetAdapter implements Iterable<Map<String, Object>>, AutoClos
             }
 
             @Override
-            @SuppressWarnings("unchecked")
             public Map<String, Object> next() {
                 if (!hasNext()) {
                     throw new NoSuchElementException();
@@ -112,26 +99,8 @@ public class ResultSetAdapter implements Iterable<Map<String, Object>>, AutoClos
                 LinkedHashMap<String, Object> row = new LinkedHashMap<>();
 
                 try {
-                    for (int i = 0, n = columns.size(); i < n; i++) {
-                        String[] path = columns.get(i);
-
-                        LinkedHashMap<String, Object> map = row;
-
-                        for (int j = 0; j < path.length - 1; j++) {
-                            String key = path[j];
-
-                            Object child = map.get(key);
-
-                            if (!(child instanceof LinkedHashMap<?, ?>)) {
-                                child = new LinkedHashMap<>();
-
-                                map.put(key, child);
-                            }
-
-                            map = (LinkedHashMap<String, Object>)child;
-                        }
-
-                        map.put(path[path.length - 1], resultSet.getObject(i + 1));
+                    for (int i = 0, n = resultSetMetaData.getColumnCount(); i < n; i++) {
+                        row.put(resultSetMetaData.getColumnLabel(i + 1), resultSet.getObject(i + 1));
                     }
                 } catch (SQLException exception) {
                     throw new RuntimeException(exception);
