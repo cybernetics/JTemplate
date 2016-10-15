@@ -173,6 +173,8 @@ public abstract class DispatcherServlet extends HttpServlet {
                 if (responseMapping.name().equals(name)) {
                     URL url = type.getResource(name);
 
+                    // TODO How to handle missing template?
+
                     if (url != null) {
                         templateEncoder = new TemplateEncoder(url, typeName);
 

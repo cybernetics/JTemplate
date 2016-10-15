@@ -14,17 +14,13 @@
 
 package org.jtemplate.examples.mongodb;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.bson.Document;
 import org.jtemplate.DispatcherServlet;
-import org.jtemplate.TemplateEncoder;
+import org.jtemplate.RequestMethod;
+import org.jtemplate.ResponseMapping;
 import org.jtemplate.util.IteratorAdapter;
 
 import com.mongodb.client.FindIterable;
@@ -43,23 +39,25 @@ import com.mongodb.client.MongoDatabase;
 public class RestaurantServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Class<?> type = getClass();
-        String servletPath = request.getServletPath();
-
-        response.setContentType(getServletContext().getMimeType(servletPath) + ";charset=UTF-8");
-
-        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
-
+    /**
+     * Retrieves a list of restaurants in a given zip code.
+     *
+     * @param zipCode
+     * The zip code to search for.
+     *
+     * @return
+     * A list of restaurants in the given zip code.
+     */
+    @RequestMethod("GET")
+    @ResponseMapping(name="restaurants.csv", charset="ISO-8859")
+    @ResponseMapping(name="restaurants.html")
+    @ResponseMapping(name="restaurants.json")
+    @ResponseMapping(name="restaurants.xml")
+    public IteratorAdapter getRestaurants(String zipCode) {
         MongoDatabase db = MongoClientManager.getMongoClient().getDatabase("test");
 
-        FindIterable<Document> iterable = db.getCollection("restaurants").find(new Document("address.zipcode", request.getParameter("zipCode")));
+        FindIterable<Document> iterable = db.getCollection("restaurants").find(new Document("address.zipcode", zipCode));
 
-        try (IteratorAdapter iteratorAdapter = new IteratorAdapter(iterable.iterator())) {
-            templateEncoder.writeValue(iteratorAdapter, response.getOutputStream());
-        } catch (Exception exception) {
-            throw new ServletException(exception);
-        }
+        return new IteratorAdapter(iterable.iterator());
     }
 }

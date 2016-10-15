@@ -42,6 +42,29 @@ import org.jtemplate.beans.BeanAdapter;
 public class EventServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
+    /**
+     * Adds an event.
+     *
+     * @param title
+     * The title of the event.
+     */
+    @RequestMethod("POST")
+    public void addEvent(String title) {
+        SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.save(new Event(title, new Date()));
+            session.getTransaction().commit();
+        }
+    }
+
+    /**
+     * Retrieves a list of all events.
+     *
+     * @return
+     * A list of all events.
+     */
     @RequestMethod("GET")
     @ResponseMapping(name="events.csv", charset="ISO-8859")
     @ResponseMapping(name="events.html")
@@ -53,21 +76,12 @@ public class EventServlet extends DispatcherServlet {
         List<?> events;
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
+
             events = session.createQuery("from Event").list();
+
             session.getTransaction().commit();
         }
 
         return BeanAdapter.adapt(events);
-    }
-
-    @RequestMethod("POST")
-    public void addEvent(String title) {
-        SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.save(new Event(title, new Date()));
-            session.getTransaction().commit();
-        }
     }
 }

@@ -14,19 +14,16 @@
 
 package org.jtemplate.examples.mysql;
 
-import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.jtemplate.DispatcherServlet;
-import org.jtemplate.TemplateEncoder;
+import org.jtemplate.RequestMethod;
+import org.jtemplate.ResponseMapping;
 import org.jtemplate.sql.Parameters;
 import org.jtemplate.sql.ResultSetAdapter;
 
@@ -53,27 +50,27 @@ public class PetServlet extends DispatcherServlet {
         }
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Class<?> type = getClass();
-        String servletPath = request.getServletPath();
-
-        response.setContentType(getServletContext().getMimeType(servletPath) + ";charset=UTF-8");
-
-        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
-
+    /**
+     * Retrieves a list of pets belonging to a given owner.
+     *
+     * @param owner
+     * The pet owner to search for.
+     *
+     * @return
+     * A list of pets belonging to the given owner.
+     */
+    @RequestMethod("GET")
+    @ResponseMapping(name="pets.csv", charset="ISO-8859")
+    @ResponseMapping(name="pets.html")
+    @ResponseMapping(name="pets.json")
+    @ResponseMapping(name="pets.xml")
+    public ResultSetAdapter getPets(String owner) throws SQLException {
         Parameters parameters = Parameters.parse("select name, species, sex, birth from pet where owner = :owner");
 
-        try {
-            PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(parameters.getSQL());
+        PreparedStatement statement = DriverManager.getConnection(DB_URL).prepareStatement(parameters.getSQL());
 
-            parameters.apply(statement, mapOf(entry("owner", request.getParameter("owner"))));
+        parameters.apply(statement, mapOf(entry("owner", owner)));
 
-            try (ResultSetAdapter resultSetAdapter = new ResultSetAdapter(statement.executeQuery())){
-                templateEncoder.writeValue(resultSetAdapter, response.getOutputStream());
-            }
-        } catch (SQLException exception) {
-            throw new ServletException(exception);
-        }
+        return new ResultSetAdapter(statement.executeQuery());
     }
 }
