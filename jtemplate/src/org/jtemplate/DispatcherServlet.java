@@ -173,26 +173,26 @@ public abstract class DispatcherServlet extends HttpServlet {
                 if (responseMapping.name().equals(name)) {
                     URL url = type.getResource(name);
 
-                    // TODO How to handle missing template?
-
-                    if (url != null) {
-                        templateEncoder = new TemplateEncoder(url, typeName);
-
-                        templateEncoder.getContext().putAll(mapOf(
-                            entry("scheme", request.getScheme()),
-                            entry("serverName", request.getServerName()),
-                            entry("serverPort", request.getServerPort()),
-                            entry("contextPath", request.getContextPath())
-                        ));
-
-                        String mimeType = servletContext.getMimeType(name);
-
-                        if (mimeType != null) {
-                            response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
-                        }
-
-                        break;
+                    if (url == null) {
+                        throw new ServletException("Template not found.");
                     }
+
+                    templateEncoder = new TemplateEncoder(url, typeName);
+
+                    templateEncoder.getContext().putAll(mapOf(
+                        entry("scheme", request.getScheme()),
+                        entry("serverName", request.getServerName()),
+                        entry("serverPort", request.getServerPort()),
+                        entry("contextPath", request.getContextPath())
+                    ));
+
+                    String mimeType = servletContext.getMimeType(name);
+
+                    if (mimeType != null) {
+                        response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
+                    }
+
+                    break;
                 }
             }
         }
