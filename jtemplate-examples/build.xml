@@ -30,6 +30,8 @@
                     <include name="mongo-java-driver-*.jar"/>
                 </fileset>
             </classpath>
+            
+            <compilerarg value="-parameters"/>
         </javac>
         
         <delete dir="." includes="${warfile}"/>

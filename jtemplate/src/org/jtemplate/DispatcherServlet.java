@@ -163,15 +163,15 @@ public abstract class DispatcherServlet extends HttpServlet {
         Class<?> returnType = method.getReturnType();
 
         if (returnType != Void.TYPE && returnType != Void.class) {
-            String servletPath = request.getServletPath();
+            String name = request.getServletPath().substring(1);
 
             ResponseMapping[] responseMappings = method.getAnnotationsByType(ResponseMapping.class);
 
             for (int i = 0; i < responseMappings.length; i++) {
                 ResponseMapping responseMapping = responseMappings[i];
 
-                if (responseMapping.name().equals(servletPath)) {
-                    URL url = type.getResource(servletPath);
+                if (responseMapping.name().equals(name)) {
+                    URL url = type.getResource(name);
 
                     if (url != null) {
                         templateEncoder = new TemplateEncoder(url, typeName);
@@ -183,7 +183,7 @@ public abstract class DispatcherServlet extends HttpServlet {
                             entry("contextPath", request.getContextPath())
                         ));
 
-                        String mimeType = servletContext.getMimeType(servletPath);
+                        String mimeType = servletContext.getMimeType(name);
 
                         if (mimeType != null) {
                             response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
