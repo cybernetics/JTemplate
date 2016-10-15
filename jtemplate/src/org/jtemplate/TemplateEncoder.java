@@ -37,7 +37,7 @@ import java.util.Set;
 /**
  * Template encoder.
  */
-public class TemplateEncoder {
+public class TemplateEncoder implements Encoder {
     // Marker type enumeration
     private enum MarkerType {
         SECTION_START,
@@ -123,6 +123,7 @@ public class TemplateEncoder {
      * @throws IOException
      * If an exception occurs.
      */
+    @Override
     public void writeValue(Object value, OutputStream outputStream) throws IOException {
         writeValue(value, outputStream, Locale.getDefault());
     }

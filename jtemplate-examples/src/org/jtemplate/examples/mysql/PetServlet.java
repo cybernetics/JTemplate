@@ -31,9 +31,9 @@ import org.jtemplate.sql.ResultSetAdapter;
  * Pet servlet.
  */
 @WebServlet(urlPatterns={
+    "/pets/*",
     "/pets.csv",
     "/pets.html",
-    "/pets.json",
     "/pets.xml"
 }, loadOnStartup=1)
 @MultipartConfig
@@ -62,7 +62,6 @@ public class PetServlet extends DispatcherServlet {
     @RequestMethod("GET")
     @ResponseMapping(name="pets.csv", charset="ISO-8859")
     @ResponseMapping(name="pets.html")
-    @ResponseMapping(name="pets.json")
     @ResponseMapping(name="pets.xml")
     public ResultSetAdapter getPets(String owner) throws SQLException {
         Parameters parameters = Parameters.parse("select name, species, sex, birth from pet where owner = :owner");

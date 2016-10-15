@@ -30,9 +30,9 @@ import com.mongodb.client.MongoDatabase;
  * Restaurant service.
  */
 @WebServlet(urlPatterns={
+    "/restaurants/*",
     "/restaurants.csv",
     "/restaurants.html",
-    "/restaurants.json",
     "/restaurants.xml"
 }, loadOnStartup=1)
 @MultipartConfig
@@ -51,7 +51,6 @@ public class RestaurantServlet extends DispatcherServlet {
     @RequestMethod("GET")
     @ResponseMapping(name="restaurants.csv", charset="ISO-8859")
     @ResponseMapping(name="restaurants.html")
-    @ResponseMapping(name="restaurants.json")
     @ResponseMapping(name="restaurants.xml")
     public IteratorAdapter getRestaurants(String zipCode) {
         MongoDatabase db = MongoClientManager.getMongoClient().getDatabase("test");

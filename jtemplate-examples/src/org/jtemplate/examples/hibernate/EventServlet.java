@@ -35,7 +35,6 @@ import org.jtemplate.beans.BeanAdapter;
     "/events/*",
     "/events.csv",
     "/events.html",
-    "/events.json",
     "/events.xml"
 }, loadOnStartup=1)
 @MultipartConfig
@@ -68,7 +67,6 @@ public class EventServlet extends DispatcherServlet {
     @RequestMethod("GET")
     @ResponseMapping(name="events.csv", charset="ISO-8859")
     @ResponseMapping(name="events.html")
-    @ResponseMapping(name="events.json")
     @ResponseMapping(name="events.xml")
     public List<Map<String, ?>> getEvents() {
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();

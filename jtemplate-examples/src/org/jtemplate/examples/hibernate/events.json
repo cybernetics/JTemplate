@@ -1,6 +1,0 @@
-[{{#.[,]}}
-  {
-    "title": "{{title:^json}}",
-    "date": {{date:format=time}}
-  }{{/.}}
-]

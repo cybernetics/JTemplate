@@ -158,7 +158,7 @@ public abstract class DispatcherServlet extends HttpServlet {
 
         ServletContext servletContext = getServletContext();
 
-        TemplateEncoder templateEncoder = null;
+        Encoder encoder = null;
 
         Class<?> returnType = method.getReturnType();
 
@@ -177,7 +177,13 @@ public abstract class DispatcherServlet extends HttpServlet {
                         throw new ServletException("Template not found.");
                     }
 
-                    templateEncoder = new TemplateEncoder(url, typeName);
+                    String mimeType = servletContext.getMimeType(name);
+
+                    if (mimeType != null) {
+                        response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
+                    }
+
+                    TemplateEncoder templateEncoder = new TemplateEncoder(url, typeName);
 
                     templateEncoder.getContext().putAll(mapOf(
                         entry("scheme", request.getScheme()),
@@ -186,14 +192,16 @@ public abstract class DispatcherServlet extends HttpServlet {
                         entry("contextPath", request.getContextPath())
                     ));
 
-                    String mimeType = servletContext.getMimeType(name);
-
-                    if (mimeType != null) {
-                        response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
-                    }
+                    encoder = templateEncoder;
 
                     break;
                 }
+            }
+
+            if (encoder == null) {
+                response.setContentType(String.format("application/json;charset=%s", UTF_8_ENCODING));
+
+                encoder = new JSONEncoder();
             }
         }
 
@@ -219,11 +227,11 @@ public abstract class DispatcherServlet extends HttpServlet {
             }
 
             // Write response
-            if (templateEncoder == null) {
+            if (encoder == null) {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } else {
                 try {
-                    templateEncoder.writeValue(result, response.getOutputStream());
+                    encoder.writeValue(result, response.getOutputStream());
                 } catch (IOException exception) {
                     servletContext.log(typeName, exception);
                 }
