@@ -50,19 +50,43 @@ public abstract class DispatcherServlet extends HttpServlet {
 
     private HashMap<String, LinkedList<Method>> handlerMap = new HashMap<>();
 
+    private ThreadLocal<HttpServletRequest> request = new ThreadLocal<>();
+    private ThreadLocal<HttpServletResponse> response = new ThreadLocal<>();
+
     private static final String UTF_8_ENCODING = "UTF-8";
 
     private static final String MULTIPART_FORM_DATA_MIME_TYPE = "multipart/form-data";
 
     @Override
     public void init() throws ServletException {
-        // TODO Populate handler map (method/handler list)
+        // Populate handler map
+        Method[] methods = getClass().getMethods();
+
+        for (int i = 0; i < methods.length; i++) {
+            Method method = methods[i];
+
+            RequestMethod requestMethod = method.getAnnotation(RequestMethod.class);
+
+            if (requestMethod != null) {
+                String key = requestMethod.value().toLowerCase();
+
+                LinkedList<Method> handlerList = handlerMap.get(key);
+
+                if (handlerList == null) {
+                    handlerList = new LinkedList<>();
+
+                    handlerMap.put(key, handlerList);
+                }
+
+                handlerList.add(method);
+            }
+        }
     }
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Look up handler list
-        LinkedList<Method> handlerList = handlerMap.get(request.getMethod());
+        LinkedList<Method> handlerList = handlerMap.get(request.getMethod().toLowerCase());
 
         if (handlerList == null) {
             super.service(request, response);
@@ -121,7 +145,7 @@ public abstract class DispatcherServlet extends HttpServlet {
             }
         }
 
-        // Invoke handler method
+        // Look up handler method
         Class<?> type = getClass();
         String typeName = type.getName();
 
@@ -149,32 +173,31 @@ public abstract class DispatcherServlet extends HttpServlet {
                 if (responseMapping.name().equals(servletPath)) {
                     URL url = type.getResource(servletPath);
 
-                    if (url == null) {
-                        response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
-                        return;
+                    if (url != null) {
+                        templateEncoder = new TemplateEncoder(url, typeName);
+
+                        templateEncoder.getContext().putAll(mapOf(
+                            entry("scheme", request.getScheme()),
+                            entry("serverName", request.getServerName()),
+                            entry("serverPort", request.getServerPort()),
+                            entry("contextPath", request.getContextPath())
+                        ));
+
+                        String mimeType = servletContext.getMimeType(servletPath);
+
+                        if (mimeType != null) {
+                            response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
+                        }
+
+                        break;
                     }
-
-                    templateEncoder = new TemplateEncoder(url, typeName);
-
-                    templateEncoder.getContext().putAll(mapOf(
-                        entry("scheme", request.getScheme()),
-                        entry("serverName", request.getServerName()),
-                        entry("serverPort", request.getServerPort()),
-                        entry("contextPath", request.getContextPath())
-                    ));
-
-                    String mimeType = servletContext.getMimeType(servletPath);
-
-                    if (mimeType != null) {
-                        response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
-                    }
-
-                    break;
                 }
             }
         }
 
-        // TODO Set thread-local request and response properties
+        // Invoke handler method
+        this.request.set(request);
+        this.response.set(response);
 
         Object result = null;
 
@@ -374,6 +397,26 @@ public abstract class DispatcherServlet extends HttpServlet {
         }
 
         return argument;
+    }
+
+    /**
+     * Returns the servlet request.
+     *
+     * @return
+     * The servlet request.
+     */
+    protected HttpServletRequest getRequest() {
+        return request.get();
+    }
+
+    /**
+     * Returns the servlet response.
+     *
+     * @return
+     * The servlet response.
+     */
+    protected HttpServletResponse getResponse() {
+        return response.get();
     }
 
     /**
