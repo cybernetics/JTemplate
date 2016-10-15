@@ -21,27 +21,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation that specifies a handler.
+ * Annotation that specifies a response mapping.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@Repeatable(Handlers.class)
-public @interface Handler {
+@Repeatable(ResponseMappings.class)
+public @interface ResponseMapping {
     /**
      * @return
-     * The HTTP verb associated with the handler.
+     * The name of the template that will be applied to the response.
      */
-    public String method();
+    public String name();
 
     /**
      * @return
-     * The path associated with the handler.
-     */
-    public String path();
-
-    /**
-     * @return
-     * The character set of the content produced by the handler.
+     * The character set of the content produced by the template.
      */
     public String charset() default "UTF-8";
 }

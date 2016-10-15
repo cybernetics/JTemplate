@@ -14,19 +14,18 @@
 
 package org.jtemplate.examples.hibernate;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.jtemplate.DispatcherServlet;
-import org.jtemplate.TemplateEncoder;
+import org.jtemplate.RequestMethod;
+import org.jtemplate.ResponseMapping;
 import org.jtemplate.beans.BeanAdapter;
 
 /**
@@ -43,15 +42,12 @@ import org.jtemplate.beans.BeanAdapter;
 public class EventServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Class<?> type = getClass();
-        String servletPath = request.getServletPath();
-
-        response.setContentType(getServletContext().getMimeType(servletPath) + ";charset=UTF-8");
-
-        TemplateEncoder templateEncoder = new TemplateEncoder(type.getResource(servletPath.substring(1)), type.getName());
-
+    @RequestMethod("GET")
+    @ResponseMapping(name="events.csv", charset="ISO-8859")
+    @ResponseMapping(name="events.html")
+    @ResponseMapping(name="events.json")
+    @ResponseMapping(name="events.xml")
+    public List<Map<String, ?>> getEvents() {
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
 
         List<?> events;
@@ -61,19 +57,17 @@ public class EventServlet extends DispatcherServlet {
             session.getTransaction().commit();
         }
 
-        templateEncoder.writeValue(BeanAdapter.adapt(events), response.getOutputStream());
+        return BeanAdapter.adapt(events);
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+    @RequestMethod("POST")
+    public void addEvent(String title) {
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
 
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.save(new Event(request.getParameter("title"), new Date()));
+            session.save(new Event(title, new Date()));
             session.getTransaction().commit();
         }
-
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 }

@@ -20,14 +20,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation representing multiple handler annotations.
+ * Annotation representing multiple response mapping annotations.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Handlers {
+public @interface ResponseMappings {
     /**
      * @return
-     * The handler annotations.
+     * The response mapping annotations.
      */
-    public Handler[] value();
+    public ResponseMapping[] value();
 }

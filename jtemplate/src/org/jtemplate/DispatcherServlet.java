@@ -48,7 +48,7 @@ import javax.servlet.http.Part;
 public abstract class DispatcherServlet extends HttpServlet {
     private static final long serialVersionUID = 0;
 
-    private HashMap<String, HashMap<String, LinkedList<Method>>> resources = new HashMap<>();
+    private HashMap<String, LinkedList<Method>> handlerMap = new HashMap<>();
 
     private static final String UTF_8_ENCODING = "UTF-8";
 
@@ -56,25 +56,16 @@ public abstract class DispatcherServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        // TODO Populate resource map (path/method/handler list)
+        // TODO Populate handler map (method/handler list)
     }
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Look up handler list
-        String servletPath = request.getServletPath();
-
-        HashMap<String, LinkedList<Method>> resource = resources.get(servletPath);
-
-        if (resource == null) {
-            super.service(request, response);
-            return;
-        }
-
-        LinkedList<Method> handlerList = resource.get(request.getMethod());
+        LinkedList<Method> handlerList = handlerMap.get(request.getMethod());
 
         if (handlerList == null) {
-            response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            super.service(request, response);
             return;
         }
 
@@ -131,8 +122,6 @@ public abstract class DispatcherServlet extends HttpServlet {
         }
 
         // Invoke handler method
-        ServletContext servletContext = getServletContext();
-
         Class<?> type = getClass();
         String typeName = type.getName();
 
@@ -143,21 +132,26 @@ public abstract class DispatcherServlet extends HttpServlet {
             return;
         }
 
-        Class<?> returnType = method.getReturnType();
+        ServletContext servletContext = getServletContext();
 
         TemplateEncoder templateEncoder = null;
 
+        Class<?> returnType = method.getReturnType();
+
         if (returnType != Void.TYPE && returnType != Void.class) {
-            Handler[] handlers = method.getAnnotationsByType(Handler.class);
+            String servletPath = request.getServletPath();
 
-            for (int i = 0; i < handlers.length; i++) {
-                Handler handler = handlers[i];
+            ResponseMapping[] responseMappings = method.getAnnotationsByType(ResponseMapping.class);
 
-                if (handler.path().equals(servletPath)) {
-                    URL url = type.getResource(handler.path());
+            for (int i = 0; i < responseMappings.length; i++) {
+                ResponseMapping responseMapping = responseMappings[i];
+
+                if (responseMapping.name().equals(servletPath)) {
+                    URL url = type.getResource(servletPath);
 
                     if (url == null) {
-                        throw new ServletException("Template not found.");
+                        response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+                        return;
                     }
 
                     templateEncoder = new TemplateEncoder(url, typeName);
@@ -172,7 +166,7 @@ public abstract class DispatcherServlet extends HttpServlet {
                     String mimeType = servletContext.getMimeType(servletPath);
 
                     if (mimeType != null) {
-                        response.setContentType(String.format("%s;charset=%s", mimeType, handler.charset()));
+                        response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
                     }
 
                     break;
@@ -200,7 +194,7 @@ public abstract class DispatcherServlet extends HttpServlet {
             }
 
             // Write response
-            if (returnType == Void.TYPE || returnType == Void.class) {
+            if (templateEncoder == null) {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } else {
                 try {
