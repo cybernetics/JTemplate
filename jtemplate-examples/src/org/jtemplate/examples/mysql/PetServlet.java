@@ -60,7 +60,7 @@ public class PetServlet extends DispatcherServlet {
      * A list of pets belonging to the given owner.
      */
     @RequestMethod("GET")
-    @ResponseMapping(name="pets.csv", charset="ISO-8859")
+    @ResponseMapping(name="pets.csv", charset="ISO-8859-1")
     @ResponseMapping(name="pets.html")
     @ResponseMapping(name="pets.xml")
     public ResultSetAdapter getPets(String owner) throws SQLException {

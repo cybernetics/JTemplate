@@ -21,6 +21,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -56,6 +57,7 @@ public abstract class DispatcherServlet extends HttpServlet {
     private static final String UTF_8_ENCODING = "UTF-8";
 
     private static final String MULTIPART_FORM_DATA_MIME_TYPE = "multipart/form-data";
+    private static final String PLAIN_TEXT_MIME_TYPE = "text/plain";
 
     @Override
     public void init() throws ServletException {
@@ -179,11 +181,13 @@ public abstract class DispatcherServlet extends HttpServlet {
 
                     String mimeType = servletContext.getMimeType(name);
 
-                    if (mimeType != null) {
-                        response.setContentType(String.format("%s;charset=%s", mimeType, responseMapping.charset()));
+                    if (mimeType == null) {
+                        mimeType = PLAIN_TEXT_MIME_TYPE;
                     }
 
-                    TemplateEncoder templateEncoder = new TemplateEncoder(url, typeName);
+                    TemplateEncoder templateEncoder = new TemplateEncoder(url, mimeType, Charset.forName(responseMapping.charset()));
+
+                    templateEncoder.setBaseName(typeName);
 
                     templateEncoder.getContext().putAll(mapOf(
                         entry("scheme", request.getScheme()),
@@ -199,8 +203,6 @@ public abstract class DispatcherServlet extends HttpServlet {
             }
 
             if (encoder == null) {
-                response.setContentType(String.format("application/json;charset=%s", UTF_8_ENCODING));
-
                 encoder = new JSONEncoder();
             }
         }
@@ -230,6 +232,8 @@ public abstract class DispatcherServlet extends HttpServlet {
             if (encoder == null) {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } else {
+                response.setContentType(encoder.getContentType());
+
                 try {
                     encoder.writeValue(result, response.getOutputStream());
                 } catch (IOException exception) {

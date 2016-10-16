@@ -48,8 +48,10 @@ public class TemplateEncoder implements Encoder {
     }
 
     private URL url;
-    private String baseName;
+    private String mimeType;
+    private Charset charset;
 
+    private String baseName = null;
     private HashMap<String, Object> context = new HashMap<>();
 
     private Map<String, Reader> includes = new HashMap<>();
@@ -78,9 +80,12 @@ public class TemplateEncoder implements Encoder {
      *
      * @param url
      * The URL of the template.
+     *
+     * @param mimeType
+     * The MIME type of the content produced by the template.
      */
-    public TemplateEncoder(URL url) {
-        this(url, null);
+    public TemplateEncoder(URL url, String mimeType) {
+        this(url, mimeType, Charset.forName(UTF_8_ENCODING));
     }
 
     /**
@@ -89,15 +94,49 @@ public class TemplateEncoder implements Encoder {
      * @param url
      * The URL of the template.
      *
-     * @param baseName
-     * The base name of the template's resource bundle.
+     * @param mimeType
+     * The MIME type of the content produced by the template.
+     *
+     * @param charset
+     * The character encoding used by the template.
      */
-    public TemplateEncoder(URL url, String baseName) {
+    public TemplateEncoder(URL url, String mimeType, Charset charset) {
         if (url == null) {
             throw new IllegalArgumentException();
         }
 
+        if (mimeType == null) {
+            throw new IllegalArgumentException();
+        }
+
+        if (charset == null) {
+            throw new IllegalArgumentException();
+        }
+
         this.url = url;
+        this.mimeType = mimeType;
+        this.charset = charset;
+    }
+
+    /**
+     * Returns the base name of the template's resource bundle.
+     *
+     * @return
+     * The base name of the template's resource bundle, or <tt>null</tt> if no
+     * base name has been set.
+     */
+    public String getBaseName() {
+        return baseName;
+    }
+
+    /**
+     * Sets the base name of the template's resource bundle.
+     *
+     * @param baseName
+     * The base name of the template's resource bundle, or <tt>null</tt> for no
+     * base name.
+     */
+    public void setBaseName(String baseName) {
         this.baseName = baseName;
     }
 
@@ -109,6 +148,11 @@ public class TemplateEncoder implements Encoder {
      */
     public Map<String, Object> getContext() {
         return context;
+    }
+
+    @Override
+    public String getContentType() {
+        return String.format("%s;charset=%s", mimeType, charset.name());
     }
 
     /**
@@ -144,7 +188,7 @@ public class TemplateEncoder implements Encoder {
      * If an exception occurs.
      */
     public void writeValue(Object value, OutputStream outputStream, Locale locale) throws IOException {
-        Writer writer = new OutputStreamWriter(outputStream, Charset.forName(UTF_8_ENCODING));
+        Writer writer = new OutputStreamWriter(outputStream, charset);
         writeValue(value, writer, locale);
 
         writer.flush();
@@ -184,7 +228,7 @@ public class TemplateEncoder implements Encoder {
     public void writeValue(Object value, Writer writer, Locale locale) throws IOException {
         if (value != null) {
             try (InputStream inputStream = url.openStream()) {
-                Reader reader = new PagedReader(new InputStreamReader(inputStream, Charset.forName(UTF_8_ENCODING)));
+                Reader reader = new PagedReader(new InputStreamReader(inputStream, charset));
 
                 writeRoot(value, writer, locale, reader);
             }
@@ -362,10 +406,10 @@ public class TemplateEncoder implements Encoder {
                             String key = components[0];
 
                             Object value;
-                            if (key.startsWith(CONTEXT_PREFIX)) {
-                                value = context.get(key.substring(CONTEXT_PREFIX.length()));
-                            } else if (key.startsWith(RESOURCE_PREFIX) && baseName != null) {
+                            if (key.startsWith(RESOURCE_PREFIX) && baseName != null) {
                                 value = ResourceBundle.getBundle(baseName, locale).getString(key.substring(RESOURCE_PREFIX.length()));
+                            } else if (key.startsWith(CONTEXT_PREFIX)) {
+                                value = context.get(key.substring(CONTEXT_PREFIX.length()));
                             } else if (key.equals(".")) {
                                 value = dictionary.get(key);
                             } else {

@@ -65,7 +65,7 @@ public class EventServlet extends DispatcherServlet {
      * A list of all events.
      */
     @RequestMethod("GET")
-    @ResponseMapping(name="events.csv", charset="ISO-8859")
+    @ResponseMapping(name="events.csv", charset="ISO-8859-1")
     @ResponseMapping(name="events.html")
     @ResponseMapping(name="events.xml")
     public List<Map<String, ?>> getEvents() {

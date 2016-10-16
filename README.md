@@ -242,10 +242,15 @@ The JTemplate JAR file can be downloaded [here](https://github.com/gk-brown/JTem
 ## TemplateEncoder Class
 The `TemplateEncoder` class is responsible for merging a template document with a data dictionary. It provides the following constructors:
 
-    public TemplateEncoder(URL url) { ... }
-    public TemplateEncoder(URL url, String baseName) { ... }
+    public TemplateEncoder(URL url, String mimeType) { ... }
+    public TemplateEncoder(URL url, String mimeType, Charset charset) { ... }
     
-The first argument specifies the URL of the template document (generally as a resource on the application's classpath). The second argument represents the optional base name of the resource bundle that will be used to resolve resource references.
+The first argument specifies the URL of the template document (generally as a resource on the application's classpath). The second represents the MIME type of the content produced by the template. The third argument represents the optional character encoding used by the template document. The default value is UTF-8.
+
+The following methods can be used to get and set the optional base name of the resource bundle that will be used to resolve resource references:
+
+    public String getBaseName() { ... }
+    public void setBaseName(String baseName) { ... }
 
 Values can be added to the template context using the following method, which returns a map representing the context entries:
 

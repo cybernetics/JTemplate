@@ -49,7 +49,7 @@ public class RestaurantServlet extends DispatcherServlet {
      * A list of restaurants in the given zip code.
      */
     @RequestMethod("GET")
-    @ResponseMapping(name="restaurants.csv", charset="ISO-8859")
+    @ResponseMapping(name="restaurants.csv", charset="ISO-8859-1")
     @ResponseMapping(name="restaurants.html")
     @ResponseMapping(name="restaurants.xml")
     public IteratorAdapter getRestaurants(String zipCode) {

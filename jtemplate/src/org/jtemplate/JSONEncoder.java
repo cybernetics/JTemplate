@@ -35,6 +35,11 @@ public class JSONEncoder implements Encoder {
     private int depth = 0;
 
     @Override
+    public String getContentType() {
+        return String.format("application/json;charset=%s", UTF_8_ENCODING);
+    }
+
+    @Override
     public void writeValue(Object value, OutputStream outputStream) throws IOException {
         Writer writer = new OutputStreamWriter(outputStream, Charset.forName(UTF_8_ENCODING));
         writeValue(value, writer);
