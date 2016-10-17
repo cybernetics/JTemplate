@@ -1,9 +1,13 @@
 # Introduction
-JTemplate is an open-source implementation of the [CTemplate](https://github.com/OlafvdSpek/ctemplate) templating system (aka "Mustache") in Java.
+JTemplate is an open-source implementation of the [CTemplate](https://github.com/OlafvdSpek/ctemplate) templating system (aka "Mustache") in Java. It also provides a set of classes for implementing template-driven REST services in Java.
+
+This document introduces the JTemplate framework and provides an overview of its key features. The first section introduces the template syntax used by the CTemplate system. The remaining sections discuss the classes provided by the JTemplate framework for processing templates and implementing REST services.
 
 # Contents
 * [Template Syntax](#template-syntax)
 * [Implementation](#implementation)
+    * [Template Processing](#template-processing)
+    * [REST Services](#rest-services)
 * [Additional Information](#additional-information)
 
 # Template Syntax
@@ -225,7 +229,7 @@ Comment markers provide informational text about a template's content. They are 
     <p>Lorem ipsum dolor sit amet.</p>
 
 # Implementation
-JTemplate is distributed as a single JAR file that contains the following types, discussed in more detail below:
+JTemplate is distributed as a JAR file that contains the following classes for processing templates:
 
 * `org.jtemplate`
     * `TemplateEncoder` - template processing engine
@@ -237,9 +241,24 @@ JTemplate is distributed as a single JAR file that contains the following types,
 * `org.jtemplate.util`
     * `IteratorAdapter` - adapter class that presents the contents of an iterator as an iterable cursor
 
+It also includes the following classes for implementing template-driven REST services:
+
+* `org.jtemplate`
+    * `DispatcherServlet` - abstract base class for REST services
+    * `RequestMethod` - annotation that specifies the HTTP verb associated with a service method
+    * `ResponseMapping` - annotation that associates a template with a service response
+    * `JSONEncoder` - class used for encoding responses that are not associated with a template
+* `org.jtemplate.sql`
+    * `Parameters` - class for simplifying execution of prepared statements 
+
+Both sets of classes are discussed in more detail below.
+
 The JTemplate JAR file can be downloaded [here](https://github.com/gk-brown/JTemplate/releases). Java 8 or later is required.
 
-## TemplateEncoder Class
+## Template Processing
+This section introduces the JTemplate classes that are used for processing template documents, including the `TemplateEncoder` class, which is used to merge a data dictionary with a template document, and the `Modifier` interface, which can be used to implement custom modifiers. It also discusses several classes that are used to adapt common data structures such as Java Bean objects and JDBC result sets for use with templates.
+
+### TemplateEncoder Class
 The `TemplateEncoder` class is responsible for merging a template document with a data dictionary. It provides the following constructors:
 
     public TemplateEncoder(URL url, String mimeType) { ... }
@@ -292,7 +311,7 @@ the example code would produce the following output:
 
     a = hello, b = 123, c = true
     
-## Custom Modifiers 
+### Custom Modifiers 
 Modifiers are created by implementing the `Modifier` interface, which defines the following method:
 
     public Object apply(Object value, String argument, Locale locale);
@@ -314,7 +333,7 @@ Custom modifiers are registered by adding them to the modifier map returned by `
 
 Note that modifiers must be thread-safe, since they are shared and may be invoked concurrently by multiple encoder instances.
 
-## BeanAdapter Class
+### BeanAdapter Class
 The `BeanAdapter` class implements the `Map` interface and exposes any properties defined by the Bean as entries in the map, allowing custom data types to be used in a data dictionary.
 
 For example, the following Bean class might be used to represent the simple statistical data discussed earlier:
@@ -378,7 +397,7 @@ An example that uses `BeanAdapter` to apply a template to a `Statistics` instanc
 
 Note that, if a property returns a nested Bean type, the property's value will be automatically wrapped in a `BeanAdapter` instance. Additionally, if a property returns a `List` or `Map` type, the value will be wrapped in an adapter of the appropriate type that automatically adapts its sub-elements.
 
-## ResultSetAdapter Class
+### ResultSetAdapter Class
 The `ResultSetAdapter` class implements the `Iterable` interface and makes each row in a JDBC result set appear as an instance of `Map`, allowing query results to be used as a data dictionary. It also implements `AutoCloseable`: closing the adapter closes the underlying result set, statement, and connection, ensuring that database resources are not leaked. 
 
 For example:
@@ -397,7 +416,7 @@ For example:
     
     System.out.println(result);
 
-## IteratorAdapter Class
+### IteratorAdapter Class
 The `IteratorAdapter` class implements the `Iterable` interface and makes each value produced by an iterator appear to be an element of the adapter, allowing the iterator's contents to be used as a data dictionary. It also implements `AutoCloseable`: if the underlying iterator type is itself an instance of `AutoCloseable`, closing the adapter also closes the underlying cursor.
 
 `IteratorAdapter` is typically used to transform result data produced by NoSQL databases such as MongoDB. It can also be used to transform the result of stream operations on Java collection types. For example:
@@ -414,6 +433,157 @@ The `IteratorAdapter` class implements the `Iterable` interface and makes each v
     }
 
     System.out.println(result);
+
+## REST Services
+This section introduces the JTemplate classes that are used for implementing template-driven REST services, including `DispatcherServlet`, which serves as an abstract base class for REST services, the `RequestMethod` annotation, which specifies the HTTP verb associated with a service method, and the `ResponseMapping` annotation, which associates a template with a service response. The `JSONEncoder` class, which is used to encode responses that are not associated with a template, is also discussed.
+
+### DispatcherServlet Class
+`DispatcherServlet` is an abstract base class for REST services. Service operations are defined by adding public methods to a concrete service implementation. 
+
+For example, the following class might be used to implement the simple statistical calculations discussed in the previous section:
+
+    @WebServlet(urlPatterns={"/statistics/*"}, loadOnStartup=1)
+    public class StatisticsServlet extends DispatcherServlet {
+        public Map<String, ?> getStatistics(List<Double> values) {    
+            int count = values.size();
+
+            double sum = 0;
+            
+            for (int i = 0; i < count; i++) {
+                sum += values.get(i);
+            }
+
+            double average = sum / count;
+                        
+            return mapOf(
+                entry("count", count),
+                entry("sum", sum),
+                entry("average", average)
+            );
+        }
+    }
+
+`DispatcherServlet` converts the request parameters to the expected argument types, invokes the method, and writes the return value to the response stream. How methods are associated with HTTP verbs and how return values are serialized is discussed in more detail later.
+
+#### Method Arguments
+Method arguments may be any of the following types:
+
+* `byte`/`Byte`
+* `short`/`Short`
+* `int`/`Integer`
+* `long`/`Long`
+* `float`/`Float`
+* `double`/`Double`
+* `boolean`/`Boolean`
+* `String`
+* `java.net.URL`
+* `java.time.LocalDate`
+* `java.time.LocalTime`
+* `java.time.LocalDateTime`
+* `java.util.Date`
+* `java.util.List`
+
+Parameter values for numeric and boolean arguments are converted to the appropriate type using the parse method of the associated wrapper class (e.g. `Integer#parseInt()`). No coercion is necessary for `String` arguments. `URL` arguments represent binary content, and can only be used with `POST` requests submitted using the "multipart/form-data" encoding. 
+
+Date and time arguments are handled as follows:
+
+* `java.time.LocalDate`: result of calling `LocalDate#parse()` on parameter value
+* `java.time.LocalTime`: result of calling `LocalTime#parse()` on parameter value
+* `java.time.LocalDateTime`: result of calling `LocalDateTime#parse()` on parameter value
+* `java.util.Date`: result of calling `Long#parseLong()` on parameter value, then `Date(long)` on long result
+
+`List` arguments represent multi-value parameters. Values are coerced to the declared `List` element type; e.g. `List<Double>` or `List<URL>`. Note that, while list arguments may be used with any type of request, `URL` lists may only be used with multipart `POST` requests.
+
+Omitting the value of a primitive parameter results in an argument value of 0 for that parameter. Omitting the value of a simple reference type parameter produces a `null` argument value for that parameter. Omitting all values for a list type parameter produces an empty list argument for the parameter.
+
+Note that service classes must be compiled with the `-parameters` flag so their method parameter names are available at runtime.
+
+#### Return Values
+Methods may return any of the following types:
+
+* `byte`/`Byte`
+* `short`/`Short`
+* `int`/`Integer`
+* `long`/`Long`
+* `float`/`Float`
+* `double`/`Double`
+* `boolean`/`Boolean`
+* `CharSequence`
+* `java.time.LocalDate`
+* `java.time.LocalTime`
+* `java.time.LocalDateTime`
+* `java.util.Date`
+* `java.util.Iterable`
+* `java.util.Map`
+
+Methods may also return `void` or `Void` to indicate that they do not produce a value.
+
+`Map` implementations must use `String` values for keys. Nested structures are supported, but reference cycles are not permitted.
+
+Return values whose types implement `AutoCloseable` (such as the `ResultSetAdapter` and `IteratorAdapter` classes discussed earlier) will be automatically closed after their contents have been written to the output stream. This allows service implementations to stream response data rather than buffering it in memory before it is written.
+
+If the method completes successfully and returns a value, an HTTP 200 status code is returned. If the method returns `void` or `Void`, HTTP 204 is returned.
+
+If any exception is thrown while executing the method, HTTP 500 is returned. If an exception is thrown while serializing the response, the output is truncated. In either case, the exception is logged.
+
+#### Request and Repsonse Properties
+TODO
+
+### RequestMethod Annotation
+The `RequestMethod` annotation is used to associate an HTTP verb with a service method. The method must be publicly accessible. All public annotated methods automatically become available for remote execution when the service is published.
+
+For example...
+
+TODO
+
+TODO Multiple handler methods/argument matching
+
+`DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example...
+
+TODO HTTP 405 returned when matching method not found
+
+### ResponseMapping Annotation
+The `ResponseMapping` annotation is used to associate a template with a service response.
+
+TODO
+
+For example...
+
+TODO
+
+TODO Multiple mappings
+
+### JSONEncoder Class 
+The `JSONEncoder` class is used to encode service responses that are not associated with a template.
+
+TODO
+
+### Parameters Class
+The `Parameters` class can be used to simplify execution of prepared statements. It provides a means for executing statements using named parameter values rather than indexed arguments. Parameter names are specified by a leading `:` character. For example:
+
+    SELECT * FROM some_table 
+    WHERE column_a = :a OR column_b = :b OR column_c = COALESCE(:c, 4.0)
+    
+The `parse()` method is used to create a `Parameters` instance from a SQL statement. It takes a string or reader containing the SQL text as an argument; for example:
+
+    Parameters parameters = Parameters.parse(sql);
+
+The `getSQL()` method returns the parsed SQL in standard JDBC syntax:
+
+    SELECT * FROM some_table 
+    WHERE column_a = ? OR column_b = ? OR column_c = COALESCE(?, 4.0)
+
+This value is used to create the actual prepared statement:
+
+    PreparedStatement statement = DriverManager.getConnection(url).prepareStatement(parameters.getSQL());
+
+Parameter values are specified via a map passed to the `apply()` method:
+
+    parameters.apply(statement, mapOf(entry("a", "hello"), entry("b", 3)));
+
+Once applied, the statement can be executed:
+
+    return new ResultSetAdapter(statement.executeQuery());    
 
 # Additional Information
 For additional information and examples, see the [the wiki](https://github.com/gk-brown/JTemplate/wiki).
