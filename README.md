@@ -490,9 +490,15 @@ Method arguments may be any of the following types:
 
 Parameter values for numeric and boolean arguments are converted to the appropriate type using the parse method of the associated wrapper class (e.g. `Integer#parseInt()`). No coercion is necessary for `String` arguments. 
 
-`URL` arguments represent binary content, such as a file upload submitted via an HTML form. As with HTML, they can only be used with `POST` requests submitted using the "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation. For example...
+`URL` arguments represent binary content, such as a file upload submitted via an HTML form. As with HTML, they can only be used with `POST` requests submitted using the "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation; for example:
 
-TODO
+    @MultipartConfig
+    public class FileUploadServlet extends DispatcherServlet {
+        @RequestMethod("POST") 
+        public void upload(URL file) throws IOException { 
+            ... 
+        }
+    }
 
 Date and time arguments are converted as follows:
 
@@ -544,17 +550,35 @@ If any exception is thrown while executing the method, HTTP 500 is returned. If 
 The methods return thread-local values set by `DispatcherServlet` before a service method is invoked.
 
 ### RequestMethod Annotation
-The `RequestMethod` annotation is used to associate an HTTP verb with a service method. The method must be publicly accessible. All public annotated methods automatically become available for remote execution when the service is published.
+The `RequestMethod` annotation is used to associate an HTTP verb with a service method. The method must be publicly accessible. All public annotated methods automatically become available for remote execution when the service is published. 
 
-For example...
+Multiple methods may be associated with the same HTTP verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, a service might define the following methods, both of which are mapped to the `GET` method:
 
-TODO
+    @RequestMapping("GET")
+    public double getSum(double a, double b) {
+        return a + b;
+    }
+    
+    @RequestMapping("GET")
+    public double getSum(List<Double> values) {
+        double total = 0;
+    
+        for (double value : values) {
+            total += value;
+        }
+    
+        return total;
+    }
 
-TODO Multiple handler methods/argument matching
+The following request would cause the first method to be invoked:
 
-`DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example...
+    GET /math/sum?a=2&b=4
+    
+This request would invoke the second method:
 
-TODO HTTP 405 returned when matching method not found
+    GET /math/sum?values=1&values=2&values=3
+
+An HTTP 405 response is returned when no method matching the given arguments can be found.
 
 ### ResponseMapping Annotation
 The `ResponseMapping` annotation is used to associate a template with a service response.
