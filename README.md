@@ -279,7 +279,7 @@ Templates are applied using one of the following methods:
     public void writeValue(Object value, Writer writer) { ... }
     public void writeValue(Object value, Writer writer, Locale locale) { ... }
     
-The first argument represents the value to write (i.e. the data dictionary), and the second the output destination. The optional third argument represents the locale for which the template will be applied. If unspecified, the current default locale is used.
+The first argument represents the value to write (i.e. the data dictionary), and the second the output destination. The optional third argument represents the locale for which the template will be applied. If unspecified, the default locale is used.
 
 For example, the following code snippet applies a template named _map.txt_ to the contents of a data dictionary whose values are specified by a hash map:
 
@@ -289,7 +289,7 @@ For example, the following code snippet applies a template named _map.txt_ to th
     map.put("b", 123");
     map.put("c", true);
 
-    TemplateEncoder encoder = new TemplateEncoder(getClass().getResource("map.txt"));
+    TemplateEncoder encoder = new TemplateEncoder(getClass().getResource("map.txt"), "text/plain");
 
     String result;
     try (StringWriter writer = new StringWriter()) {
@@ -300,11 +300,11 @@ For example, the following code snippet applies a template named _map.txt_ to th
     
     System.out.println(result);
 
-If _map.txt_ is specified as follows:
+If _map.txt_ is defined as follows:
 
     a = {{a}}, b = {{b}}, c = {{c}}
 
-the example code would produce the following output:
+this code would produce the following output:
 
     a = hello, b = 123, c = true
     
@@ -466,7 +466,7 @@ For example, the following class might be used to implement a service that perfo
         }
     }
 
-A `GET` for this URL might produce an HTML document similar to the one shown in the first section.
+A `GET` for this URL might produce an HTML document similar to the one shown in the first section:
 
     /statistics.html?values=1&values=3&values=5
 
