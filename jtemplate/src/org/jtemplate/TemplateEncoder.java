@@ -105,6 +105,16 @@ public class TemplateEncoder extends Encoder {
     }
 
     /**
+     * Returns the URL of the template.
+     *
+     * @return
+     * The URL of the template.
+     */
+    public URL getURL() {
+        return url;
+    }
+
+    /**
      * Returns the base name of the template's resource bundle.
      *
      * @return

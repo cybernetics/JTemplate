@@ -514,26 +514,7 @@ Omitting the value of a primitive parameter results in an argument value of 0 fo
 Note that service classes must be compiled with the `-parameters` flag so their method parameter names are available at runtime.
 
 #### Return Values
-Methods may return any of the following types:
-
-* `byte`/`Byte`
-* `short`/`Short`
-* `int`/`Integer`
-* `long`/`Long`
-* `float`/`Float`
-* `double`/`Double`
-* `boolean`/`Boolean`
-* `CharSequence`
-* `java.time.LocalDate`
-* `java.time.LocalTime`
-* `java.time.LocalDateTime`
-* `java.util.Date`
-* `java.util.Iterable`
-* `java.util.Map`
-
-Methods may also return `void` or `Void` to indicate that they do not produce a value.
-
-`Map` implementations must use `String` values for keys. Nested structures are supported, but reference cycles are not permitted.
+Methods may return any type that can be represented by the template associated with the current request, or by `JSONEncoder` if the request is not associated with a template. Methods may also return `void` or `Void` to indicate that they do not produce a value.
 
 Return values whose types implement `AutoCloseable` (such as the `ResultSetAdapter` and `IteratorAdapter` classes discussed earlier) will be automatically closed after their contents have been written to the output stream. This allows service implementations to stream response data rather than buffering it in memory before it is written.
 
@@ -619,9 +600,19 @@ For example, the following markup uses the `contextPath` value to embed a produc
     <img src="{{$contextPath}}/images/{{productID}}.jpg"/>
 
 ### JSONEncoder Class 
-The `JSONEncoder` class is used to encode service responses that are not associated with a template.
+The `JSONEncoder` class is used to encode service responses that are not associated with a template. Return values are mapped to their JSON equivalents as follows:
 
-TODO Type handling
+* `Number` or numeric primitive: number
+* `Boolean` or `boolean`: true/false
+* `CharSequence`: string
+* `java.time.LocalDate`: string formatted as an ISO date
+* `java.time.LocalTime`: string formatted as an ISO time
+* `java.time.LocalDateTime`: string formatted as an ISO date/time
+* `java.util.Date`: long value representing the date's absolute time
+* `java.util.Iterable`: array
+* `java.util.Map`: object
+
+`Map` implementations must use `String` values for keys. Nested structures are supported, but reference cycles are not permitted.
 
 ### Parameters Class
 The `Parameters` class can be used to simplify execution of prepared statements. It provides a means for executing statements using named parameter values rather than indexed arguments. Parameter names are specified by a leading `:` character. For example:
