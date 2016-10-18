@@ -17,8 +17,6 @@ package org.jtemplate;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
@@ -37,7 +35,7 @@ import java.util.Set;
 /**
  * Template encoder.
  */
-public class TemplateEncoder implements Encoder {
+public class TemplateEncoder extends Encoder {
     // Marker type enumeration
     private enum MarkerType {
         SECTION_START,
@@ -48,8 +46,6 @@ public class TemplateEncoder implements Encoder {
     }
 
     private URL url;
-    private String mimeType;
-    private Charset charset;
 
     private String baseName = null;
     private HashMap<String, Object> context = new HashMap<>();
@@ -70,8 +66,6 @@ public class TemplateEncoder implements Encoder {
 
     private static final int EOF = -1;
 
-    private static final String UTF_8_ENCODING = "UTF-8";
-
     private static final String CONTEXT_PREFIX = "$";
     private static final String RESOURCE_PREFIX = "@";
 
@@ -85,7 +79,7 @@ public class TemplateEncoder implements Encoder {
      * The MIME type of the content produced by the template.
      */
     public TemplateEncoder(URL url, String mimeType) {
-        this(url, mimeType, Charset.forName(UTF_8_ENCODING));
+        this(url, mimeType, Charset.forName("UTF-8"));
     }
 
     /**
@@ -101,21 +95,13 @@ public class TemplateEncoder implements Encoder {
      * The character encoding used by the template.
      */
     public TemplateEncoder(URL url, String mimeType, Charset charset) {
+        super(mimeType, charset);
+
         if (url == null) {
             throw new IllegalArgumentException();
         }
 
-        if (mimeType == null) {
-            throw new IllegalArgumentException();
-        }
-
-        if (charset == null) {
-            throw new IllegalArgumentException();
-        }
-
         this.url = url;
-        this.mimeType = mimeType;
-        this.charset = charset;
     }
 
     /**
@@ -151,84 +137,10 @@ public class TemplateEncoder implements Encoder {
     }
 
     @Override
-    public String getContentType() {
-        return String.format("%s;charset=%s", mimeType, charset.name());
-    }
-
-    /**
-     * Writes a value to an output stream.
-     *
-     * @param value
-     * The value to encode.
-     *
-     * @param outputStream
-     * The output stream to write to.
-     *
-     * @throws IOException
-     * If an exception occurs.
-     */
-    @Override
-    public void writeValue(Object value, OutputStream outputStream) throws IOException {
-        writeValue(value, outputStream, Locale.getDefault());
-    }
-
-    /**
-     * Writes a value to an output stream.
-     *
-     * @param value
-     * The value to encode.
-     *
-     * @param outputStream
-     * The output stream to write to.
-     *
-     * @param locale
-     * The locale to use when writing the value.
-     *
-     * @throws IOException
-     * If an exception occurs.
-     */
-    public void writeValue(Object value, OutputStream outputStream, Locale locale) throws IOException {
-        Writer writer = new OutputStreamWriter(outputStream, charset);
-        writeValue(value, writer, locale);
-
-        writer.flush();
-    }
-
-    /**
-     * Writes a value to a character stream.
-     *
-     * @param value
-     * The value to encode.
-     *
-     * @param writer
-     * The character stream to write to.
-     *
-     * @throws IOException
-     * If an exception occurs.
-     */
-    public void writeValue(Object value, Writer writer) throws IOException {
-        writeValue(value, writer, Locale.getDefault());
-    }
-
-    /**
-     * Writes a value to a character stream.
-     *
-     * @param value
-     * The value to encode.
-     *
-     * @param writer
-     * The character stream to write to.
-     *
-     * @param locale
-     * The locale to use when writing the value.
-     *
-     * @throws IOException
-     * If an exception occurs.
-     */
     public void writeValue(Object value, Writer writer, Locale locale) throws IOException {
         if (value != null) {
             try (InputStream inputStream = url.openStream()) {
-                Reader reader = new PagedReader(new InputStreamReader(inputStream, charset));
+                Reader reader = new PagedReader(new InputStreamReader(inputStream, getCharset()));
 
                 writeRoot(value, writer, locale, reader);
             }

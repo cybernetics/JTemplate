@@ -16,18 +16,59 @@ package org.jtemplate;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.util.Locale;
 
 /**
- * Interface representing an encoder.
+ * Abstract base class for encoders.
  */
-public interface Encoder {
+public abstract class Encoder {
+    private String mimeType;
+    private Charset charset;
+
     /**
-     * Returns the MIME type of the content produced by the encoder.
+     * Constructs a new encoder.
+     *
+     * @param mimeType
+     * The encoder's MIME type.
+     *
+     * @param charset
+     * The character encoding.
+     */
+    public Encoder(String mimeType, Charset charset) {
+        if (mimeType == null) {
+            throw new IllegalArgumentException();
+        }
+
+        if (charset == null) {
+            throw new IllegalArgumentException();
+        }
+
+        this.mimeType = mimeType;
+        this.charset = charset;
+    }
+
+    /**
+     * Returns the encoder's MIME type.
      *
      * @return
-     * The MIME type of the content produced by the encoder.
+     * The encoder's MIME type.
      */
-    public String getContentType();
+    public String getMIMEType() {
+        return mimeType;
+    }
+
+    /**
+     * Returns the character encoding.
+     *
+     * @return
+     * The character encoding.
+     */
+    public Charset getCharset() {
+        return charset;
+    }
 
     /**
      * Writes a value to an output stream.
@@ -41,5 +82,62 @@ public interface Encoder {
      * @throws IOException
      * If an exception occurs.
      */
-    public void writeValue(Object value, OutputStream outputStream) throws IOException;
+    public void writeValue(Object value, OutputStream outputStream) throws IOException {
+        writeValue(value, outputStream, Locale.getDefault());
+    }
+
+    /**
+     * Writes a value to an output stream.
+     *
+     * @param value
+     * The value to encode.
+     *
+     * @param outputStream
+     * The output stream to write to.
+     *
+     * @param locale
+     * The locale to use when writing the value.
+     *
+     * @throws IOException
+     * If an exception occurs.
+     */
+    public void writeValue(Object value, OutputStream outputStream, Locale locale) throws IOException {
+        Writer writer = new OutputStreamWriter(outputStream, charset);
+        writeValue(value, writer, locale);
+
+        writer.flush();
+    }
+
+    /**
+     * Writes a value to a character stream.
+     *
+     * @param value
+     * The value to encode.
+     *
+     * @param writer
+     * The character stream to write to.
+     *
+     * @throws IOException
+     * If an exception occurs.
+     */
+    public void writeValue(Object value, Writer writer) throws IOException {
+        writeValue(value, writer, Locale.getDefault());
+    }
+
+    /**
+     * Writes a value to a character stream.
+     *
+     * @param value
+     * The value to encode.
+     *
+     * @param writer
+     * The character stream to write to.
+     *
+     * @param locale
+     * The locale to use when writing the value.
+     *
+     * @throws IOException
+     * If an exception occurs.
+     */
+    public abstract void writeValue(Object value, Writer writer, Locale locale) throws IOException;
 }

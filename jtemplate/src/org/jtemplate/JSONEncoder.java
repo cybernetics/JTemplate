@@ -15,8 +15,6 @@
 package org.jtemplate;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
@@ -24,42 +22,24 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 /**
  * JSON encoder.
  */
-public class JSONEncoder implements Encoder {
-    private static final String UTF_8_ENCODING = "UTF-8";
-
+public class JSONEncoder extends Encoder {
     private int depth = 0;
 
-    @Override
-    public String getContentType() {
-        return String.format("application/json;charset=%s", UTF_8_ENCODING);
-    }
-
-    @Override
-    public void writeValue(Object value, OutputStream outputStream) throws IOException {
-        Writer writer = new OutputStreamWriter(outputStream, Charset.forName(UTF_8_ENCODING));
-        writeValue(value, writer);
-
-        writer.flush();
-    }
-
     /**
-     * Writes a value to a character stream.
-     *
-     * @param value
-     * The value to encode.
-     *
-     * @param writer
-     * The character stream to write to.
-     *
-     * @throws IOException
-     * If an exception occurs.
+     * Constructs a new JSON encoder.
      */
-    public void writeValue(Object value, Writer writer) throws IOException {
+    public JSONEncoder() {
+        super("application/json", Charset.forName("UTF-8"));
+    }
+
+    @Override
+    public void writeValue(Object value, Writer writer, Locale locale) throws IOException {
         if (value == null) {
             writer.append(null);
         } else if (value instanceof CharSequence) {

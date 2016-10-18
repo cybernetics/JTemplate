@@ -54,11 +54,6 @@ public abstract class DispatcherServlet extends HttpServlet {
     private ThreadLocal<HttpServletRequest> request = new ThreadLocal<>();
     private ThreadLocal<HttpServletResponse> response = new ThreadLocal<>();
 
-    private static final String UTF_8_ENCODING = "UTF-8";
-
-    private static final String MULTIPART_FORM_DATA_MIME_TYPE = "multipart/form-data";
-    private static final String PLAIN_TEXT_MIME_TYPE = "text/plain";
-
     @Override
     public void init() throws ServletException {
         // Populate handler map
@@ -97,7 +92,7 @@ public abstract class DispatcherServlet extends HttpServlet {
 
         // Set character encoding
         if (request.getCharacterEncoding() == null) {
-            request.setCharacterEncoding(UTF_8_ENCODING);
+            request.setCharacterEncoding("UTF-8");
         }
 
         // Populate parameter map
@@ -123,7 +118,7 @@ public abstract class DispatcherServlet extends HttpServlet {
 
         String contentType = request.getContentType();
 
-        if (contentType != null && contentType.startsWith(MULTIPART_FORM_DATA_MIME_TYPE)) {
+        if (contentType != null && contentType.startsWith("multipart/form-data")) {
             for (Part part : request.getParts()) {
                 String submittedFileName = part.getSubmittedFileName();
 
@@ -182,7 +177,7 @@ public abstract class DispatcherServlet extends HttpServlet {
                     String mimeType = servletContext.getMimeType(name);
 
                     if (mimeType == null) {
-                        mimeType = PLAIN_TEXT_MIME_TYPE;
+                        mimeType = "text/plain";
                     }
 
                     TemplateEncoder templateEncoder = new TemplateEncoder(url, mimeType, Charset.forName(responseMapping.charset()));
@@ -232,10 +227,10 @@ public abstract class DispatcherServlet extends HttpServlet {
             if (encoder == null) {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } else {
-                response.setContentType(encoder.getContentType());
+                response.setContentType(String.format("%s;charset=%s", encoder.getMIMEType(), encoder.getCharset().name()));
 
                 try {
-                    encoder.writeValue(result, response.getOutputStream());
+                    encoder.writeValue(result, response.getOutputStream(), request.getLocale());
                 } catch (IOException exception) {
                     servletContext.log(typeName, exception);
                 }

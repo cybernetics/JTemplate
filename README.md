@@ -552,7 +552,7 @@ The methods return thread-local values set by `DispatcherServlet` before a servi
 ### RequestMethod Annotation
 The `RequestMethod` annotation is used to associate an HTTP verb with a service method. The method must be publicly accessible. All public annotated methods automatically become available for remote execution when the service is published. 
 
-Multiple methods may be associated with the same HTTP verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, a service might define the following methods, both of which are mapped to the `GET` method:
+Multiple methods may be associated with the same verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, a service might define the following methods, both of which are mapped to the `GET` method:
 
     @RequestMapping("GET")
     public double getSum(double a, double b) {
@@ -581,19 +581,42 @@ This request would invoke the second method:
 An HTTP 405 response is returned when no method matching the given arguments can be found.
 
 ### ResponseMapping Annotation
-The `ResponseMapping` annotation is used to associate a template with a service response.
+The optional `ResponseMapping` annotation is used to associate a template with a service response. The annotation specifies the name of the template that will be applied to the value returned by the method, along with an optional character encoding. The default is UTF-8.
 
-TODO
+Multiple templates may be associated with a single method. For example, the following service retrieves a list of pets by owner name. Results may be returned either as CSV, HTML, or XML:
 
-For example...
+    @WebServlet(urlPatterns={
+        "/pets/*",
+        "/pets.csv",
+        "/pets.html",
+        "/pets.xml"
+    }, loadOnStartup=1)
+    public class PetServlet extends DispatcherServlet {
+        @RequestMethod("GET")
+        @ResponseMapping(name="pets.csv", charset="ISO-8859-1")
+        @ResponseMapping(name="pets.html")
+        @ResponseMapping(name="pets.xml")
+        public ResultSetAdapter getPets(String owner) throws SQLException {
+            ...
+        }
+    }
 
-TODO
+If no template is associated with a request, the value returned by the method will be encoded as JSON using the `JSONEncoder` class. For example, a `GET` for the following URL would information about all pets belonging to "Gwen" as a JSON document:
 
-TODO Multiple mappings
+    /pets?owner=Gwen
 
-TODO Localization
+`JSONEncoder` is discussed in more detail in the next section.
 
-TODO Context properties
+Any resource references in a template document are resolved against the resource bundle with the same base name as the service type, using the locale specified by the current HTTP request. Additionally, `DispatcherServlet` provides the following context properties to the template encoder. These values can be used to access request-specific information in a template document:
+
+* `scheme` - the scheme used to make the request; e.g. "http" or "https"
+* `serverName` - the host name of the server to which the request was sent
+* `serverPort` - the port to which the request was sent
+* `contextPath` - the context path of the web application handling the request
+
+For example, the following markup uses the `contextPath` value to embed a product image in an HTML template:
+
+    <img src="{{$contextPath}}/images/{{productID}}.jpg"/>
 
 ### JSONEncoder Class 
 The `JSONEncoder` class is used to encode service responses that are not associated with a template.
