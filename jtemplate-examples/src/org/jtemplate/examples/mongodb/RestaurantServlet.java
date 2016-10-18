@@ -14,7 +14,6 @@
 
 package org.jtemplate.examples.mongodb;
 
-import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 
 import org.bson.Document;
@@ -35,7 +34,6 @@ import com.mongodb.client.MongoDatabase;
     "/restaurants.html",
     "/restaurants.xml"
 }, loadOnStartup=1)
-@MultipartConfig
 public class RestaurantServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 

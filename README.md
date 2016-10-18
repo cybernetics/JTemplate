@@ -1,5 +1,5 @@
 # Introduction
-JTemplate is an open-source implementation of the [CTemplate](https://github.com/OlafvdSpek/ctemplate) templating system (aka "Mustache") in Java. It also provides a set of classes for implementing template-driven REST services in Java.
+JTemplate is an open-source implementation of the [CTemplate](https://github.com/OlafvdSpek/ctemplate) templating system (aka "Mustache") for Java. It also provides a set of classes for implementing template-driven REST services in Java.
 
 This document introduces the JTemplate framework and provides an overview of its key features. The first section introduces the template syntax used by the CTemplate system. The remaining sections discuss the classes provided by the JTemplate framework for processing templates and implementing REST services.
 
@@ -246,7 +246,7 @@ It also includes the following classes for implementing template-driven REST ser
 * `org.jtemplate`
     * `DispatcherServlet` - abstract base class for REST services
     * `RequestMethod` - annotation that specifies the HTTP verb associated with a service method
-    * `ResponseMapping` - annotation that associates a template with a service response
+    * `ResponseMapping` - annotation that associates a template with a method result
     * `JSONEncoder` - class used for encoding responses that are not associated with a template
 * `org.jtemplate.sql`
     * `Parameters` - class for simplifying execution of prepared statements 
@@ -256,9 +256,6 @@ Both sets of classes are discussed in more detail below.
 The JTemplate JAR file can be downloaded [here](https://github.com/gk-brown/JTemplate/releases). Java 8 or later is required.
 
 ## Template Processing
-This section introduces the JTemplate classes that are used for processing template documents, including the `TemplateEncoder` class, which is used to merge a data dictionary with a template document, and the `Modifier` interface, which can be used to implement custom modifiers. It also discusses several classes that are used to adapt common data structures such as Java Bean objects and JDBC result sets for use with templates.
-
-### TemplateEncoder Class
 The `TemplateEncoder` class is responsible for merging a template document with a data dictionary. It provides the following constructors:
 
     public TemplateEncoder(URL url, String mimeType) { ... }
@@ -435,15 +432,21 @@ The `IteratorAdapter` class implements the `Iterable` interface and makes each v
     System.out.println(result);
 
 ## REST Services
-This section introduces the JTemplate classes that are used for implementing template-driven REST services, including `DispatcherServlet`, which serves as an abstract base class for REST services, the `RequestMethod` annotation, which specifies the HTTP verb associated with a service method, and the `ResponseMapping` annotation, which associates a template with a service response. The `JSONEncoder` class, which is used to encode responses that are not associated with a template, is also discussed.
+In addition to the template processing classes discussed in the previous section, JTemplate provides several classes for use in implementing template-driven REST services. These classes are discussed in more detail below.
 
 ### DispatcherServlet Class
 `DispatcherServlet` is an abstract base class for REST services. Service operations are defined by adding public methods to a concrete service implementation. 
 
-For example, the following class might be used to implement the simple statistical calculations discussed in the previous section:
+Services are accessed by submitting an HTTP request for a path associated with a servlet instance. Arguments are provided either via the query string or in the request body, like an HTML form. `DispatcherServlet` converts the request parameters to the expected argument types, invokes the method, and writes the return value to the response stream.
 
-    @WebServlet(urlPatterns={"/statistics/*"}, loadOnStartup=1)
+The `RequestMethod` annotation is used to associate a service method with an HTTP verb such as `GET` or `POST`. The optional `ResponseMapping` annotation associates a template document with a method result. If specified, `TemplateEncoder` is used to apply the template to the return value to produce the final response. If no response mapping is specified, the return value is automatically serialized as JSON using the `JSONEncoder` class. `RequestMethod`, `ResponseMapping`, and `JSONEncoder` are all discussed in more detail below.
+
+For example, the following class might be used to implement a service that performs the simple statistical calculations discussed in the previous section:
+
+    @WebServlet(urlPatterns={"/statistics.html"})
     public class StatisticsServlet extends DispatcherServlet {
+        @RequestMethod("GET")
+        @ResponseMapping("statistics.html")
         public Map<String, ?> getStatistics(List<Double> values) {    
             int count = values.size();
 
@@ -463,7 +466,9 @@ For example, the following class might be used to implement the simple statistic
         }
     }
 
-`DispatcherServlet` converts the request parameters to the expected argument types, invokes the method, and writes the return value to the response stream. How methods are associated with HTTP verbs and how return values are serialized is discussed in more detail later.
+A `GET` for this URL might produce an HTML document similar to the one shown in the first section.
+
+    /statistics.html?values=1&values=3&values=5
 
 #### Method Arguments
 Method arguments may be any of the following types:
@@ -483,16 +488,18 @@ Method arguments may be any of the following types:
 * `java.util.Date`
 * `java.util.List`
 
-Parameter values for numeric and boolean arguments are converted to the appropriate type using the parse method of the associated wrapper class (e.g. `Integer#parseInt()`). No coercion is necessary for `String` arguments. `URL` arguments represent binary content, and can only be used with `POST` requests submitted using the "multipart/form-data" encoding. 
+Parameter values for numeric and boolean arguments are converted to the appropriate type using the parse method of the associated wrapper class (e.g. `Integer#parseInt()`). No coercion is necessary for `String` arguments. 
 
-Date and time arguments are handled as follows:
+`URL` arguments represent binary content, such as a file upload submitted via an HTML form. As with HTML, they can only be used with `POST` requests submitted using the "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation.
+
+Date and time arguments are converted as follows:
 
 * `java.time.LocalDate`: result of calling `LocalDate#parse()` on parameter value
 * `java.time.LocalTime`: result of calling `LocalTime#parse()` on parameter value
 * `java.time.LocalDateTime`: result of calling `LocalDateTime#parse()` on parameter value
 * `java.util.Date`: result of calling `Long#parseLong()` on parameter value, then `Date(long)` on long result
 
-`List` arguments represent multi-value parameters. Values are coerced to the declared `List` element type; e.g. `List<Double>` or `List<URL>`. Note that, while list arguments may be used with any type of request, `URL` lists may only be used with multipart `POST` requests.
+`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically coerced to the declared `List` element type; e.g. `List<Double>` or `List<String>`. URL lists are supported, but may only be used with multipart `POST` requests. 
 
 Omitting the value of a primitive parameter results in an argument value of 0 for that parameter. Omitting the value of a simple reference type parameter produces a `null` argument value for that parameter. Omitting all values for a list type parameter produces an empty list argument for the parameter.
 
@@ -527,7 +534,12 @@ If the method completes successfully and returns a value, an HTTP 200 status cod
 If any exception is thrown while executing the method, HTTP 500 is returned. If an exception is thrown while serializing the response, the output is truncated. In either case, the exception is logged.
 
 #### Request and Repsonse Properties
-TODO
+`DispatcherServlet` provides the following methods to allow an implementing class to get access to the current request and response objects; for example, to get the name of the authenticated user or to add a custom header to the response:
+
+    protected HttpServletRequest getRequest() { ... }
+    protected HttpServletResponse getResponse() { ... }
+    
+The methods return thread-local values set by `DispatcherServlet` before a service method is invoked.
 
 ### RequestMethod Annotation
 The `RequestMethod` annotation is used to associate an HTTP verb with a service method. The method must be publicly accessible. All public annotated methods automatically become available for remote execution when the service is published.
@@ -552,6 +564,10 @@ For example...
 TODO
 
 TODO Multiple mappings
+
+TODO Localization
+
+TODO Context properties
 
 ### JSONEncoder Class 
 The `JSONEncoder` class is used to encode service responses that are not associated with a template.

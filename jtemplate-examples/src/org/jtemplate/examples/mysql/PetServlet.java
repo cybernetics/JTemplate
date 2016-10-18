@@ -18,7 +18,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 
 import org.jtemplate.DispatcherServlet;
@@ -36,7 +35,6 @@ import org.jtemplate.sql.ResultSetAdapter;
     "/pets.html",
     "/pets.xml"
 }, loadOnStartup=1)
-@MultipartConfig
 public class PetServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 

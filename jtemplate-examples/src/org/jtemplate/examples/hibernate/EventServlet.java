@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 
 import org.hibernate.Session;
@@ -37,7 +36,6 @@ import org.jtemplate.beans.BeanAdapter;
     "/events.html",
     "/events.xml"
 }, loadOnStartup=1)
-@MultipartConfig
 public class EventServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
