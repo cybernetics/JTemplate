@@ -437,7 +437,7 @@ In addition to the template processing classes discussed in the previous section
 ### DispatcherServlet Class
 `DispatcherServlet` is an abstract base class for REST services. Service operations are defined by adding public methods to a concrete service implementation. 
 
-Services are accessed by submitting an HTTP request for a path associated with a servlet instance. Arguments are provided either via the query string or in the request body, like an HTML form. `DispatcherServlet` converts the request parameters to the expected argument types, invokes the method, and writes the return value to the response stream.
+Methods are invoked by submitting an HTTP request for a path associated with a servlet instance. Arguments are provided either via the query string or in the request body, like an HTML form. `DispatcherServlet` converts the request parameters to the expected argument types, invokes the method, and writes the return value to the response stream.
 
 The `RequestMethod` annotation is used to associate a service method with an HTTP verb such as `GET` or `POST`. The optional `ResponseMapping` annotation associates a template document with a method result. If specified, `TemplateEncoder` is used to apply the template to the return value to produce the final response. If no response mapping is specified, the return value is automatically serialized as JSON using the `JSONEncoder` class. `RequestMethod`, `ResponseMapping`, and `JSONEncoder` are all discussed in more detail below.
 
@@ -490,7 +490,7 @@ Method arguments may be any of the following types:
 
 Parameter values for numeric and boolean arguments are converted to the appropriate type using the parse method of the associated wrapper class (e.g. `Integer#parseInt()`). No coercion is necessary for `String` arguments. 
 
-`URL` arguments represent binary content, such as a file upload submitted via an HTML form. As with HTML, they can only be used with `POST` requests submitted using the "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation; for example:
+`URL` arguments represent binary content, such as a file upload submitted via an HTML form. They may be used only with `POST` requests submitted using "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation; for example:
 
     @MultipartConfig
     public class FileUploadServlet extends DispatcherServlet {
@@ -500,14 +500,14 @@ Parameter values for numeric and boolean arguments are converted to the appropri
         }
     }
 
-Date and time arguments are converted as follows:
+Date and time arguments are handled as follows:
 
 * `java.time.LocalDate`: result of calling `LocalDate#parse()` on parameter value
 * `java.time.LocalTime`: result of calling `LocalTime#parse()` on parameter value
 * `java.time.LocalDateTime`: result of calling `LocalDateTime#parse()` on parameter value
 * `java.util.Date`: result of calling `Long#parseLong()` on parameter value, then `Date(long)` on long result
 
-`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically coerced to the declared `List` element type; e.g. `List<Double>` or `List<String>`. Lists of `URL` values may be used to process multi-file uploads; however, as with single-file uploads, they may only be used with multipart `POST` requests. 
+`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically coerced to the declared `List` element type; for example, `List<Double>` or `List<String>`. Lists of `URL` values may be used to process multi-file uploads; however, as with single-file uploads, they may only be used with multipart `POST` requests. 
 
 Omitting the value of a primitive parameter results in an argument value of 0 for that parameter. Omitting the value of a simple reference type parameter produces a `null` argument value for that parameter. Omitting all values for a list type parameter produces an empty list argument for the parameter.
 
@@ -516,7 +516,7 @@ Note that service classes must be compiled with the `-parameters` flag so their 
 #### Return Values
 Methods may return any type that can be represented by the template associated with the current request, or by `JSONEncoder` if the request is not associated with a template. Methods may also return `void` or `Void` to indicate that they do not produce a value.
 
-Return values whose types implement `AutoCloseable` (such as the `ResultSetAdapter` and `IteratorAdapter` classes discussed earlier) will be automatically closed after their contents have been written to the output stream. This allows service implementations to stream response data rather than buffering it in memory before it is written.
+Return values whose types implement `AutoCloseable` (such as `ResultSetAdapter` and `IteratorAdapter`) will be automatically closed after their contents have been written to the output stream. This allows service implementations to stream response data rather than buffering it in memory before it is written.
 
 If the method completes successfully and returns a value, an HTTP 200 status code is returned. If the method returns `void` or `Void`, HTTP 204 is returned.
 
@@ -553,16 +553,16 @@ Multiple methods may be associated with the same verb. `DispatcherServlet` selec
 
 The following request would cause the first method to be invoked:
 
-    GET /math/sum?a=2&b=4
+    GET /sum?a=2&b=4
     
 This request would invoke the second method:
 
-    GET /math/sum?values=1&values=2&values=3
+    GET /sum?values=1&values=2&values=3
 
 An HTTP 405 response is returned when no method matching the given arguments can be found.
 
 ### ResponseMapping Annotation
-The optional `ResponseMapping` annotation is used to associate a template with a service response. The annotation specifies the name of the template that will be applied to the value returned by the method, along with an optional character encoding. The default is UTF-8.
+The optional `ResponseMapping` annotation is used to associate a template with a service response. The annotation specifies the name of the template that will be applied to the value returned by the method, along with an optional character encoding. The default is UTF-8. Template names correspond to resource names relative to the service's type on the classpath.
 
 Multiple templates may be associated with a single method. For example, the following service retrieves a list of pets by owner name. Results may be returned either as CSV, HTML, or XML:
 
@@ -582,13 +582,16 @@ Multiple templates may be associated with a single method. For example, the foll
         }
     }
 
-If no template is associated with a request, the value returned by the method will be encoded as JSON using the `JSONEncoder` class. For example, a `GET` for the following URL would information about all pets belonging to "Gwen" as a JSON document:
+If no template is associated with a request, the value returned by the method will be encoded as JSON using the `JSONEncoder` class. For example, a `GET` for the following URL would return information about all pets belonging to "Gwen" as a JSON document:
 
     /pets?owner=Gwen
 
 `JSONEncoder` is discussed in more detail in the next section.
 
-Any resource references in a template document are resolved against the resource bundle with the same base name as the service type, using the locale specified by the current HTTP request. Additionally, `DispatcherServlet` provides the following context properties to the template encoder. These values can be used to access request-specific information in a template document:
+#### Resource and Context References
+Any resource references in a template document are resolved against the resource bundle with the same base name as the service type, using the locale specified by the current HTTP request. For example, localized string values for the `PetService` class could be stored in a resource bundle named `PetService.properties` located alongside the `PetService` class on the classpath.
+
+Additionally, `DispatcherServlet` provides the following context properties to the template encoder. These values can be used to access request-specific information in a template document:
 
 * `scheme` - the scheme used to make the request; e.g. "http" or "https"
 * `serverName` - the host name of the server to which the request was sent
@@ -600,7 +603,7 @@ For example, the following markup uses the `contextPath` value to embed a produc
     <img src="{{$contextPath}}/images/{{productID}}.jpg"/>
 
 ### JSONEncoder Class 
-The `JSONEncoder` class is used to encode service responses that are not associated with a template. Return values are mapped to their JSON equivalents as follows:
+The `JSONEncoder` class is used to encode service responses that are not associated with a template. Return values are automatically mapped to their JSON equivalents as follows:
 
 * `Number` or numeric primitive: number
 * `Boolean` or `boolean`: true/false
@@ -615,7 +618,7 @@ The `JSONEncoder` class is used to encode service responses that are not associa
 `Map` implementations must use `String` values for keys. Nested structures are supported, but reference cycles are not permitted.
 
 ### Parameters Class
-The `Parameters` class can be used to simplify execution of prepared statements. It provides a means for executing statements using named parameter values rather than indexed arguments. Parameter names are specified by a leading `:` character. For example:
+The `Parameters` class can be used to simplify execution of prepared statements when implementing REST services that operate on relational data. It provides a means for executing statements using named parameter values rather than indexed arguments. Parameter names are specified by a leading `:` character. For example:
 
     SELECT * FROM some_table 
     WHERE column_a = :a OR column_b = :b OR column_c = COALESCE(:c, 4.0)
