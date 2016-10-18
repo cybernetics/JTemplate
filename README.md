@@ -490,7 +490,9 @@ Method arguments may be any of the following types:
 
 Parameter values for numeric and boolean arguments are converted to the appropriate type using the parse method of the associated wrapper class (e.g. `Integer#parseInt()`). No coercion is necessary for `String` arguments. 
 
-`URL` arguments represent binary content, such as a file upload submitted via an HTML form. As with HTML, they can only be used with `POST` requests submitted using the "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation.
+`URL` arguments represent binary content, such as a file upload submitted via an HTML form. As with HTML, they can only be used with `POST` requests submitted using the "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation. For example...
+
+TODO
 
 Date and time arguments are converted as follows:
 
@@ -499,7 +501,7 @@ Date and time arguments are converted as follows:
 * `java.time.LocalDateTime`: result of calling `LocalDateTime#parse()` on parameter value
 * `java.util.Date`: result of calling `Long#parseLong()` on parameter value, then `Date(long)` on long result
 
-`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically coerced to the declared `List` element type; e.g. `List<Double>` or `List<String>`. URL lists are supported, but may only be used with multipart `POST` requests. 
+`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically coerced to the declared `List` element type; e.g. `List<Double>` or `List<String>`. Lists of `URL` values may be used to process multi-file uploads; however, as with single-file uploads, they may only be used with multipart `POST` requests. 
 
 Omitting the value of a primitive parameter results in an argument value of 0 for that parameter. Omitting the value of a simple reference type parameter produces a `null` argument value for that parameter. Omitting all values for a list type parameter produces an empty list argument for the parameter.
 
@@ -572,7 +574,7 @@ TODO Context properties
 ### JSONEncoder Class 
 The `JSONEncoder` class is used to encode service responses that are not associated with a template.
 
-TODO
+TODO Type handling
 
 ### Parameters Class
 The `Parameters` class can be used to simplify execution of prepared statements. It provides a means for executing statements using named parameter values rather than indexed arguments. Parameter names are specified by a leading `:` character. For example:

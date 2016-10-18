@@ -14,6 +14,8 @@
 
 package org.jtemplate.examples;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 import javax.servlet.annotation.MultipartConfig;
@@ -25,14 +27,30 @@ import org.jtemplate.RequestMethod;
 /**
  * File upload servlet.
  */
-@WebServlet(urlPatterns={"/file/*",}, loadOnStartup=1)
+@WebServlet(urlPatterns={"/upload/*",}, loadOnStartup=1)
 @MultipartConfig
 public class FileUploadServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
+    /**
+     * Uploads a file.
+     *
+     * @param file
+     * The URL of the file being uploaded.
+     *
+     * @return
+     * The size of the uploaded file, in bytes.
+     */
     @RequestMethod("POST")
-    public int upload(URL url) {
-        // TODO Calculate the size of the uploaded file
-        return 0;
+    public long upload(URL file) throws IOException {
+        long bytes = 0;
+
+        try (InputStream inputStream = file.openStream()) {
+            while (inputStream.read() != -1) {
+                bytes++;
+            }
+        }
+
+        return bytes;
     }
 }
