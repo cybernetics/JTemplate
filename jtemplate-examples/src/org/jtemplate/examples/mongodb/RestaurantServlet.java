@@ -28,12 +28,7 @@ import com.mongodb.client.MongoDatabase;
 /**
  * Restaurant service.
  */
-@WebServlet(urlPatterns={
-    "/restaurants/*",
-    "/restaurants.csv",
-    "/restaurants.html",
-    "/restaurants.xml"
-}, loadOnStartup=1)
+@WebServlet(urlPatterns={"/restaurants/*"}, loadOnStartup=1)
 public class RestaurantServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
@@ -47,9 +42,9 @@ public class RestaurantServlet extends DispatcherServlet {
      * A list of restaurants in the given zip code.
      */
     @RequestMethod("GET")
-    @ResponseMapping(name="restaurants.csv", charset="ISO-8859-1")
-    @ResponseMapping(name="restaurants.html")
-    @ResponseMapping(name="restaurants.xml")
+    @ResponseMapping(name="restaurants~csv.txt", mimeType="text/csv", charset="ISO-8859-1", attachment=true)
+    @ResponseMapping(name="restaurants~html.txt", mimeType="text/html")
+    @ResponseMapping(name="restaurants~xml.txt", mimeType="application/xml")
     public IteratorAdapter getRestaurants(String zipCode) {
         MongoDatabase db = MongoClientManager.getMongoClient().getDatabase("test");
 

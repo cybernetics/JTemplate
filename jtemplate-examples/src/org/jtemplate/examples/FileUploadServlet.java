@@ -27,7 +27,7 @@ import org.jtemplate.RequestMethod;
 /**
  * File upload servlet.
  */
-@WebServlet(urlPatterns={"/upload/*",}, loadOnStartup=1)
+@WebServlet(urlPatterns={"/upload/*"}, loadOnStartup=1)
 @MultipartConfig
 public class FileUploadServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;

@@ -26,7 +26,7 @@ import org.jtemplate.ResponseMapping;
 /**
  * Statistics servlet.
  */
-@WebServlet(urlPatterns={"/statistics/*", "/statistics.html"}, loadOnStartup=1)
+@WebServlet(urlPatterns={"/statistics/*"}, loadOnStartup=1)
 public class StatisticsServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
@@ -40,7 +40,7 @@ public class StatisticsServlet extends DispatcherServlet {
      * A map containing the result of the calculations.
      */
     @RequestMethod("GET")
-    @ResponseMapping(name="statistics.html")
+    @ResponseMapping(name="statistics~html.txt", mimeType="text/html")
     public Map<String, ?> getStatistics(List<Double> values) {
         int count = values.size();
 

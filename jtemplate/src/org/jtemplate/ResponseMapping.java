@@ -35,7 +35,20 @@ public @interface ResponseMapping {
 
     /**
      * @return
+     * The MIME type of the content produced by the template.
+     */
+    public String mimeType();
+
+    /**
+     * @return
      * The character set of the content produced by the template.
      */
     public String charset() default "UTF-8";
+
+    /**
+     * @return
+     * <tt>true</tt> if the response should be treated as an attachment;
+     * <tt>false</tt>, otherwise.
+     */
+    public boolean attachment() default false;
 }

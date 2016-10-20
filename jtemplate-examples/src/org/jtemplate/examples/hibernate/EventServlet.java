@@ -30,12 +30,7 @@ import org.jtemplate.beans.BeanAdapter;
 /**
  * Event servlet.
  */
-@WebServlet(urlPatterns={
-    "/events/*",
-    "/events.csv",
-    "/events.html",
-    "/events.xml"
-}, loadOnStartup=1)
+@WebServlet(urlPatterns={"/events/*"}, loadOnStartup=1)
 public class EventServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
@@ -63,9 +58,9 @@ public class EventServlet extends DispatcherServlet {
      * A list of all events.
      */
     @RequestMethod("GET")
-    @ResponseMapping(name="events.csv", charset="ISO-8859-1")
-    @ResponseMapping(name="events.html")
-    @ResponseMapping(name="events.xml")
+    @ResponseMapping(name="events~csv.txt", mimeType="text/csv", charset="ISO-8859-1", attachment=true)
+    @ResponseMapping(name="events~html.txt", mimeType="text/html")
+    @ResponseMapping(name="events~xml.txt", mimeType="application/xml")
     public List<Map<String, ?>> getEvents() {
         SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
 

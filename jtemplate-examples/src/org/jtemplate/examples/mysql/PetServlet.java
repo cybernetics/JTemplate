@@ -29,12 +29,7 @@ import org.jtemplate.sql.ResultSetAdapter;
 /**
  * Pet servlet.
  */
-@WebServlet(urlPatterns={
-    "/pets/*",
-    "/pets.csv",
-    "/pets.html",
-    "/pets.xml"
-}, loadOnStartup=1)
+@WebServlet(urlPatterns={"/pets/*"}, loadOnStartup=1)
 public class PetServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
@@ -58,9 +53,9 @@ public class PetServlet extends DispatcherServlet {
      * A list of pets belonging to the given owner.
      */
     @RequestMethod("GET")
-    @ResponseMapping(name="pets.csv", charset="ISO-8859-1")
-    @ResponseMapping(name="pets.html")
-    @ResponseMapping(name="pets.xml")
+    @ResponseMapping(name="pets~csv.txt", mimeType="text/csv", charset="ISO-8859-1", attachment=true)
+    @ResponseMapping(name="pets~html.txt", mimeType="text/html")
+    @ResponseMapping(name="pets~xml.txt", mimeType="application/xml")
     public ResultSetAdapter getPets(String owner) throws SQLException {
         Parameters parameters = Parameters.parse("select name, species, sex, birth from pet where owner = :owner");
 
