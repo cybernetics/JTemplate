@@ -227,7 +227,7 @@ public abstract class DispatcherServlet extends HttpServlet {
             if (encoder == null) {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } else {
-                response.setContentType(String.format("%s;charset=%s", encoder.getMIMEType(), encoder.getCharset().name()));
+                response.setContentType(String.format("%s;charset=%s", encoder.getMimeType(), encoder.getCharset().name()));
 
                 try {
                     encoder.writeValue(result, response.getOutputStream(), request.getLocale());

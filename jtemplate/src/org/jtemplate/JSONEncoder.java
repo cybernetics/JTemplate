@@ -31,11 +31,14 @@ import java.util.Map;
 public class JSONEncoder extends Encoder {
     private int depth = 0;
 
-    /**
-     * Constructs a new JSON encoder.
-     */
-    public JSONEncoder() {
-        super("application/json", Charset.forName("UTF-8"));
+    @Override
+    public String getMimeType() {
+        return "application/json";
+    }
+
+    @Override
+    public Charset getCharset() {
+        return Charset.forName("UTF-8");
     }
 
     @Override

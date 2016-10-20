@@ -46,6 +46,8 @@ public class TemplateEncoder extends Encoder {
     }
 
     private URL url;
+    private String mimeType;
+    private Charset charset;
 
     private String baseName = null;
     private HashMap<String, Object> context = new HashMap<>();
@@ -95,23 +97,31 @@ public class TemplateEncoder extends Encoder {
      * The character encoding used by the template.
      */
     public TemplateEncoder(URL url, String mimeType, Charset charset) {
-        super(mimeType, charset);
-
         if (url == null) {
             throw new IllegalArgumentException();
         }
 
+        if (mimeType == null) {
+            throw new IllegalArgumentException();
+        }
+
+        if (charset == null) {
+            throw new IllegalArgumentException();
+        }
+
         this.url = url;
+        this.mimeType = mimeType;
+        this.charset = charset;
     }
 
-    /**
-     * Returns the URL of the template.
-     *
-     * @return
-     * The URL of the template.
-     */
-    public URL getURL() {
-        return url;
+    @Override
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    @Override
+    public Charset getCharset() {
+        return charset;
     }
 
     /**

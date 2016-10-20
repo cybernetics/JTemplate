@@ -25,50 +25,21 @@ import java.util.Locale;
  * Abstract base class for encoders.
  */
 public abstract class Encoder {
-    private String mimeType;
-    private Charset charset;
-
     /**
-     * Constructs a new encoder.
-     *
-     * @param mimeType
-     * The encoder's MIME type.
-     *
-     * @param charset
-     * The character encoding.
-     */
-    public Encoder(String mimeType, Charset charset) {
-        if (mimeType == null) {
-            throw new IllegalArgumentException();
-        }
-
-        if (charset == null) {
-            throw new IllegalArgumentException();
-        }
-
-        this.mimeType = mimeType;
-        this.charset = charset;
-    }
-
-    /**
-     * Returns the encoder's MIME type.
+     * Returns the MIME type of the content produced by the encoder.
      *
      * @return
-     * The encoder's MIME type.
+     * The MIME type of the content produced by the encoder.
      */
-    public String getMIMEType() {
-        return mimeType;
-    }
+    public abstract String getMimeType();
 
     /**
-     * Returns the character encoding.
+     * Returns the character encoding used by the encoder.
      *
      * @return
-     * The character encoding.
+     * The character encoding used by the encoder.
      */
-    public Charset getCharset() {
-        return charset;
-    }
+    public abstract Charset getCharset();
 
     /**
      * Writes a value to an output stream.
@@ -102,7 +73,7 @@ public abstract class Encoder {
      * If an exception occurs.
      */
     public void writeValue(Object value, OutputStream outputStream, Locale locale) throws IOException {
-        Writer writer = new OutputStreamWriter(outputStream, charset);
+        Writer writer = new OutputStreamWriter(outputStream, getCharset());
         writeValue(value, writer, locale);
 
         writer.flush();
