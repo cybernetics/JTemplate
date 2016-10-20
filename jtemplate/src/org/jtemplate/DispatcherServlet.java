@@ -225,7 +225,9 @@ public abstract class DispatcherServlet extends HttpServlet {
 
             // Write response
             if (encoder == null) {
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                if (!response.isCommitted()) {
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                }
             } else {
                 response.setContentType(String.format("%s;charset=%s", encoder.getMimeType(), encoder.getCharset().name()));
 
