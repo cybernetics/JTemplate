@@ -543,12 +543,12 @@ The `RequestMethod` annotation is used to associate an HTTP verb with a service 
 
 Multiple methods may be associated with the same verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, a service might define the following methods, both of which are mapped to the `GET` method:
 
-    @RequestMapping("GET")
+    @RequestMethod("GET")
     public double getSum(double a, double b) {
         return a + b;
     }
     
-    @RequestMapping("GET")
+    @RequestMethod("GET")
     public double getSum(List<Double> values) {
         double total = 0;
     

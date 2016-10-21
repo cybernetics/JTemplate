@@ -21,14 +21,54 @@ import javax.servlet.annotation.WebServlet;
 
 import org.jtemplate.DispatcherServlet;
 import org.jtemplate.RequestMethod;
+import org.jtemplate.ResourcePath;
 import org.jtemplate.ResponseMapping;
 
 /**
- * Statistics servlet.
+ * Math servlet.
  */
-@WebServlet(urlPatterns={"/statistics/*"}, loadOnStartup=1)
-public class StatisticsServlet extends DispatcherServlet {
+@WebServlet(urlPatterns={"/math/*"}, loadOnStartup=1)
+public class MathServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
+
+    /**
+     * Calculates the sum of two values.
+     *
+     * @param a
+     * The first value.
+     *
+     * @param b
+     * The second value.
+     *
+     * @return
+     * The sum of the two values.
+     */
+    @RequestMethod("GET")
+    @ResourcePath("/sum")
+    public double getSum(double a, double b) {
+        return a + b;
+    }
+
+    /**
+     * Calculates the sum of a list of values.
+     *
+     * @param values
+     * The list of values.
+     *
+     * @return
+     * The sum of the values in the list.
+     */
+    @RequestMethod("GET")
+    @ResourcePath("/sum")
+    public double getSum(List<Double> values) {
+        double total = 0;
+
+        for (double value : values) {
+            total += value;
+        }
+
+        return total;
+    }
 
     /**
      * Calculates simple statistical data from a list of values.
@@ -40,6 +80,7 @@ public class StatisticsServlet extends DispatcherServlet {
      * A map containing the result of the calculations.
      */
     @RequestMethod("GET")
+    @ResourcePath("/statistics")
     @ResponseMapping(name="statistics~html.txt", mimeType="text/html")
     public Map<String, ?> getStatistics(List<Double> values) {
         int count = values.size();

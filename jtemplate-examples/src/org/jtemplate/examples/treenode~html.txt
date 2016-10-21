@@ -1,0 +1,8 @@
+<ul>
+{{#children}}
+<li>
+<p>{{name}}</p>
+{{>treenode~html.txt}}
+</li>
+{{/children}}
+</ul>
