@@ -468,13 +468,13 @@ For example, the following class might be used to implement a service that perfo
         }
     }
 
-A specific representation is requested by appending a tilde ("~") character to the service URL, followed by a file extension associated with the desired document type. The MIME type associated with the extension is used to identify the template to apply. 
+A specific representation is requested by appending a tilde ("~") character to the service URL, followed by a file extension representing the desired document type. The MIME type associated with the extension is used to identify the template to apply. 
 
-For example, a `GET` for this URL would produce a JSON document containing the result of the calculations:
+For example, a `GET` for the following URL would return the default JSON response:
 
     /statistics?values=1&values=3&values=5
-
-However, a `GET` for the following URL would return an HTML document produced by applying the template defined in _statistics~html.txt_ to the result:
+    
+However, a `GET` for this URL would return an HTML document produced by applying the template defined in _statistics~html.txt_ to the result:
 
     /statistics/~html?values=1&values=3&values=5
 
