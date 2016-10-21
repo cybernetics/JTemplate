@@ -54,6 +54,8 @@ public abstract class DispatcherServlet extends HttpServlet {
     private ThreadLocal<HttpServletRequest> request = new ThreadLocal<>();
     private ThreadLocal<HttpServletResponse> response = new ThreadLocal<>();
 
+    private static final String RESPONSE_MAPPING_PREFIX = "/~";
+
     @Override
     public void init() throws ServletException {
         // Populate handler map
@@ -143,9 +145,6 @@ public abstract class DispatcherServlet extends HttpServlet {
         }
 
         // Look up handler method
-        Class<?> type = getClass();
-        String typeName = type.getName();
-
         Method method = getMethod(handlerList, parameterMap, fileMap);
 
         if (method == null) {
@@ -160,44 +159,61 @@ public abstract class DispatcherServlet extends HttpServlet {
         Class<?> returnType = method.getReturnType();
 
         if (returnType != Void.TYPE && returnType != Void.class) {
-            String name = request.getServletPath().substring(1);
+            // Determine encoder type
+            String pathInfo = request.getPathInfo();
 
-            ResponseMapping[] responseMappings = method.getAnnotationsByType(ResponseMapping.class);
+            if (pathInfo != null && pathInfo.startsWith(RESPONSE_MAPPING_PREFIX)) {
+                // Look up response mapping
+                String path = request.getServletPath() + "." + pathInfo.substring(RESPONSE_MAPPING_PREFIX.length());
+                String file = path.substring(path.lastIndexOf('/') + 1);
 
-            for (int i = 0; i < responseMappings.length; i++) {
-                ResponseMapping responseMapping = responseMappings[i];
+                String mimeType = servletContext.getMimeType(file);
 
-                if (responseMapping.name().equals(name)) {
-                    URL url = type.getResource(name);
+                if (mimeType != null) {
+                    ResponseMapping[] responseMappings = method.getAnnotationsByType(ResponseMapping.class);
 
-                    if (url == null) {
-                        throw new ServletException("Template not found.");
+                    for (int i = 0; i < responseMappings.length; i++) {
+                        ResponseMapping responseMapping = responseMappings[i];
+
+                        if (responseMapping.mimeType().equals(mimeType)) {
+                            Class<?> type = getClass();
+
+                            String name = responseMapping.name();
+
+                            URL url = type.getResource(name);
+
+                            if (url != null) {
+                                TemplateEncoder templateEncoder = new TemplateEncoder(url, mimeType, Charset.forName(responseMapping.charset()));
+
+                                templateEncoder.setBaseName(type.getName());
+
+                                templateEncoder.getContext().putAll(mapOf(
+                                    entry("scheme", request.getScheme()),
+                                    entry("serverName", request.getServerName()),
+                                    entry("serverPort", request.getServerPort()),
+                                    entry("contextPath", request.getContextPath())
+                                ));
+
+                                encoder = templateEncoder;
+
+                                if (responseMapping.attachment()) {
+                                    response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", file));
+                                }
+
+                                break;
+                            } else {
+                                servletContext.log(String.format("Template \"%s\" not found.", name));
+                            }
+                        }
                     }
-
-                    String mimeType = servletContext.getMimeType(name);
-
-                    if (mimeType == null) {
-                        mimeType = "text/plain";
-                    }
-
-                    TemplateEncoder templateEncoder = new TemplateEncoder(url, mimeType, Charset.forName(responseMapping.charset()));
-
-                    templateEncoder.setBaseName(typeName);
-
-                    templateEncoder.getContext().putAll(mapOf(
-                        entry("scheme", request.getScheme()),
-                        entry("serverName", request.getServerName()),
-                        entry("serverPort", request.getServerPort()),
-                        entry("contextPath", request.getContextPath())
-                    ));
-
-                    encoder = templateEncoder;
-
-                    break;
                 }
-            }
 
-            if (encoder == null) {
+                if (encoder == null) {
+                    response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+                    return;
+                }
+            } else {
+                // Use default encoder
                 encoder = new JSONEncoder();
             }
         }
@@ -217,7 +233,7 @@ public abstract class DispatcherServlet extends HttpServlet {
                 Throwable cause = exception.getCause();
 
                 if (cause != null) {
-                    servletContext.log(typeName, cause);
+                    servletContext.log(String.format("Error executing method %s().", method.getName()), cause);
                 }
 
                 return;
@@ -234,7 +250,7 @@ public abstract class DispatcherServlet extends HttpServlet {
                 try {
                     encoder.writeValue(result, response.getOutputStream(), request.getLocale());
                 } catch (IOException exception) {
-                    servletContext.log(typeName, exception);
+                    servletContext.log(String.format("Error writing response for method %s().", method.getName()), exception);
                 }
             }
         } finally {
@@ -243,7 +259,7 @@ public abstract class DispatcherServlet extends HttpServlet {
                 try {
                     ((AutoCloseable)result).close();
                 } catch (Exception exception) {
-                    servletContext.log(typeName, exception);
+                    // No-op
                 }
             }
 
