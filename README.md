@@ -439,25 +439,27 @@ In addition to the template processing classes discussed in the previous section
 
 Methods are invoked by submitting an HTTP request for a path associated with a servlet instance. Arguments are provided either via the query string or in the request body, like an HTML form. `DispatcherServlet` converts the request parameters to the expected argument types, invokes the method, and writes the return value to the response stream.
 
-The `RequestMethod` annotation is used to associate a service method with an HTTP verb such as `GET` or `POST`. The optional `ResponseMapping` annotation associates a template document with a method result. If specified, `TemplateEncoder` is used to apply the template to the return value to produce the final response. If no response mapping is specified, the return value is automatically serialized as JSON using the `JSONEncoder` class. `RequestMethod`, `ResponseMapping`, and `JSONEncoder` are all discussed in more detail below.
+The `RequestMethod` annotation is used to associate a service method with an HTTP verb such as `GET` or `POST`. The optional `ResponseMapping` annotation associates a template document with a method result. If specified, `TemplateEncoder` is used to apply the template to the return value to produce the final response. Otherwise, the return value is automatically serialized as JSON using the `JSONEncoder` class. `RequestMethod`, `ResponseMapping`, and `JSONEncoder` are all discussed in more detail below.
 
 For example, the following class might be used to implement a service that performs the simple statistical calculations discussed in the previous section:
 
-    @WebServlet(urlPatterns={"/statistics.html"})
+    @WebServlet(urlPatterns={"/statistics/*"}, loadOnStartup=1)
     public class StatisticsServlet extends DispatcherServlet {
+        private static final long serialVersionUID = 0;
+    
         @RequestMethod("GET")
-        @ResponseMapping("statistics.html")
-        public Map<String, ?> getStatistics(List<Double> values) {    
+        @ResponseMapping(name="statistics~html.txt", mimeType="text/html")
+        public Map<String, ?> getStatistics(List<Double> values) {
             int count = values.size();
-
+    
             double sum = 0;
-            
+    
             for (int i = 0; i < count; i++) {
                 sum += values.get(i);
             }
-
+    
             double average = sum / count;
-                        
+    
             return mapOf(
                 entry("count", count),
                 entry("sum", sum),
@@ -466,9 +468,15 @@ For example, the following class might be used to implement a service that perfo
         }
     }
 
-A `GET` for this URL might produce an HTML document similar to the one shown in the first section:
+A specific representation is requested by appending a tilde ("~") character to the service URL, followed by a file extension associated with the desired document type. The MIME type associated with the extension is used to identify the template to apply. 
 
-    /statistics.html?values=1&values=3&values=5
+For example, a `GET` for this URL would produce a JSON document containing the result of the calculations:
+
+    /statistics?values=1&values=3&values=5
+
+However, a `GET` for the following URL would return an HTML document produced by applying the template defined in _statistics~html.txt_ to the result:
+
+    /statistics/~html?values=1&values=3&values=5
 
 #### Method Arguments
 Method arguments may be any of the following types:
@@ -490,7 +498,7 @@ Method arguments may be any of the following types:
 
 Parameter values for numeric and boolean arguments are converted to the appropriate type using the parse method of the associated wrapper class (e.g. `Integer#parseInt()`). No coercion is necessary for `String` arguments. 
 
-`URL` arguments represent binary content, such as a file upload submitted via an HTML form. They may be used only with `POST` requests submitted using "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation; for example:
+`URL` arguments represent binary content, such as a file upload submitted via an HTML form. They may be used only with `POST` requests submitted using the "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation; for example:
 
     @MultipartConfig
     public class FileUploadServlet extends DispatcherServlet {
@@ -502,32 +510,32 @@ Parameter values for numeric and boolean arguments are converted to the appropri
 
 Date and time arguments are handled as follows:
 
-* `java.time.LocalDate`: result of calling `LocalDate#parse()` on parameter value
-* `java.time.LocalTime`: result of calling `LocalTime#parse()` on parameter value
-* `java.time.LocalDateTime`: result of calling `LocalDateTime#parse()` on parameter value
-* `java.util.Date`: result of calling `Long#parseLong()` on parameter value, then `Date(long)` on long result
+* `java.time.LocalDate`: result of calling `LocalDate#parse()`
+* `java.time.LocalTime`: result of calling `LocalTime#parse()`
+* `java.time.LocalDateTime`: result of calling `LocalDateTime#parse()`
+* `java.util.Date`: result of calling `Long#parseLong()`, then `Date(long)`
 
-`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically coerced to the declared `List` element type; for example, `List<Double>` or `List<String>`. Lists of `URL` values may be used to process multi-file uploads; however, as with single-file uploads, they may only be used with multipart `POST` requests. 
+`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically coerced to the declared `List` element type; for example, `List<Double>` or `List<String>`. Lists of `URL` values can be used to process multi-file uploads; however, as with single-file uploads, they may only be used with multipart `POST` requests. 
 
 Omitting the value of a primitive parameter results in an argument value of 0 for that parameter. Omitting the value of a simple reference type parameter produces a `null` argument value for that parameter. Omitting all values for a list type parameter produces an empty list argument for the parameter.
 
 Note that service classes must be compiled with the `-parameters` flag so their method parameter names are available at runtime.
 
 #### Return Values
-Methods may return any type that can be represented by the template associated with the current request, or by `JSONEncoder` if the request is not associated with a template. Methods may also return `void` or `Void` to indicate that they do not produce a value.
+Methods may return any type that can be represented by the template associated with the current request, or by `JSONEncoder` if the request is not associated with a template. A method may also return `void` or `Void` to indicate that it does not produce a value, or that it will take responsibility for writing the response itself.
 
 Return values whose types implement `AutoCloseable` (such as `ResultSetAdapter` and `IteratorAdapter`) will be automatically closed after their contents have been written to the output stream. This allows service implementations to stream response data rather than buffering it in memory before it is written.
 
-If the method completes successfully and returns a value, an HTTP 200 status code is returned. If the method returns `void` or `Void`, HTTP 204 is returned.
+If the method completes successfully and returns a value, an HTTP 200 status code is returned. If the method returns `void` or `Void` and the response has not already been committed by the method, HTTP 204 is returned.
 
-If any exception is thrown while executing the method, HTTP 500 is returned. If an exception is thrown while serializing the response, the output is truncated. In either case, the exception is logged.
+If any exception is thrown while executing the method, HTTP 500 is returned. If an exception is thrown while serializing the response, the output may be truncated. In either case, the exception is logged.
 
 #### Request and Repsonse Properties
-`DispatcherServlet` provides the following methods to allow an implementing class to get access to the current request and response objects; for example, to get the name of the authenticated user or to add a custom header to the response:
+`DispatcherServlet` provides the following methods to allow an implementing class to get access to the current request and response objects; for example, to get the name of the authenticated user or to write a custom response:
 
     protected HttpServletRequest getRequest() { ... }
     protected HttpServletResponse getResponse() { ... }
-    
+
 The methods return thread-local values set by `DispatcherServlet` before a service method is invoked.
 
 ### RequestMethod Annotation
@@ -559,34 +567,30 @@ This request would invoke the second method:
 
     GET /sum?values=1&values=2&values=3
 
-An HTTP 405 response is returned when no method matching the given arguments can be found.
+An HTTP 405 ("Method Not Allowed") response is returned when no method matching the given arguments can be found.
 
 ### ResponseMapping Annotation
-The optional `ResponseMapping` annotation is used to associate a template with a service response. The annotation specifies the name of the template that will be applied to the value returned by the method, along with an optional character encoding. The default is UTF-8. Template names correspond to resource names relative to the service's type on the classpath.
+The optional `ResponseMapping` annotation is used to associate a template with a service response. It specifies the name of the template that will be applied to the value returned by the method, as well as the MIME type of the content produced by the template. Template documents are stored as resources relative to the service's type on the classpath.
 
-Multiple templates may be associated with a single method. For example, the following service retrieves a list of pets by owner name. Results may be returned either as CSV, HTML, or XML:
+`ResponseMapping` also supports the following optional elements:
 
-    @WebServlet(urlPatterns={
-        "/pets/*",
-        "/pets.csv",
-        "/pets.html",
-        "/pets.xml"
-    }, loadOnStartup=1)
+* `charset` - specifies the character encoding used by the template document (default is "UTF-8")
+* `attachment` - indicates that the response should be returned as an attachment (default is `false`)
+
+Multiple templates may be associated with a single method. For example, the following service retrieves a list of pets by owner name. Results may be returned either as CSV, HTML, or XML. CSV files are returned as attachments:
+
+    @WebServlet(urlPatterns={"/pets/*"}, loadOnStartup=1)
     public class PetServlet extends DispatcherServlet {
         @RequestMethod("GET")
-        @ResponseMapping(name="pets.csv", charset="ISO-8859-1")
-        @ResponseMapping(name="pets.html")
-        @ResponseMapping(name="pets.xml")
+        @ResponseMapping(name="pets~csv.txt", mimeType="text/csv", charset="ISO-8859-1", attachment=true)
+        @ResponseMapping(name="pets~html.txt", mimeType="text/html")
+        @ResponseMapping(name="pets~xml.txt", mimeType="application/xml")
         public ResultSetAdapter getPets(String owner) throws SQLException {
             ...
         }
     }
 
-If no template is associated with a request, the value returned by the method will be encoded as JSON using the `JSONEncoder` class. For example, a `GET` for the following URL would return information about all pets belonging to "Gwen" as a JSON document:
-
-    /pets?owner=Gwen
-
-`JSONEncoder` is discussed in more detail in the next section.
+If an appropriate template cannot be found, HTTP 406 ("Not Acceptable") is returned.
 
 #### Resource and Context References
 Any resource references in a template document are resolved against the resource bundle with the same base name as the service type, using the locale specified by the current HTTP request. For example, localized string values for the `PetService` class could be stored in a resource bundle named `PetService.properties` located alongside the `PetService` class on the classpath.
@@ -603,7 +607,7 @@ For example, the following markup uses the `contextPath` value to embed a produc
     <img src="{{$contextPath}}/images/{{productID}}.jpg"/>
 
 ### JSONEncoder Class 
-The `JSONEncoder` class is used to encode service responses that are not associated with a template. Return values are automatically mapped to their JSON equivalents as follows:
+If no template is associated with a request, the value returned by the method will be automatically encoded as JSON using the `JSONEncoder` class. Return values are mapped to their JSON equivalents as follows:
 
 * `Number` or numeric primitive: number
 * `Boolean` or `boolean`: true/false
