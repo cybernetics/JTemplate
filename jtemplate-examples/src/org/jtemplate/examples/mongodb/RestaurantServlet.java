@@ -14,6 +14,7 @@
 
 package org.jtemplate.examples.mongodb;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
 import org.bson.Document;
@@ -22,6 +23,7 @@ import org.jtemplate.RequestMethod;
 import org.jtemplate.ResponseMapping;
 import org.jtemplate.util.IteratorAdapter;
 
+import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
 
@@ -31,6 +33,24 @@ import com.mongodb.client.MongoDatabase;
 @WebServlet(urlPatterns={"/restaurants/*"}, loadOnStartup=1)
 public class RestaurantServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
+
+    private MongoClient mongoClient = null;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+
+        mongoClient = new MongoClient("db.local");
+    }
+
+    @Override
+    public void destroy() {
+        if (mongoClient != null) {
+            mongoClient.close();
+        }
+
+        super.destroy();
+    }
 
     /**
      * Retrieves a list of restaurants in a given zip code.
@@ -46,7 +66,7 @@ public class RestaurantServlet extends DispatcherServlet {
     @ResponseMapping(name="restaurants~html.txt", mimeType="text/html")
     @ResponseMapping(name="restaurants~xml.txt", mimeType="application/xml")
     public IteratorAdapter getRestaurants(String zipCode) {
-        MongoDatabase db = MongoClientManager.getMongoClient().getDatabase("test");
+        MongoDatabase db = mongoClient.getDatabase("test");
 
         FindIterable<Document> iterable = db.getCollection("restaurants").find(new Document("address.zipcode", zipCode));
 

@@ -18,10 +18,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.jtemplate.DispatcherServlet;
 import org.jtemplate.RequestMethod;
 import org.jtemplate.ResponseMapping;
@@ -34,6 +38,26 @@ import org.jtemplate.beans.BeanAdapter;
 public class EventServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
+    private SessionFactory sessionFactory = null;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+
+        StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure().build();
+
+        sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
+    }
+
+    @Override
+    public void destroy() {
+        if (sessionFactory != null) {
+            sessionFactory.close();
+        }
+
+        super.destroy();
+    }
+
     /**
      * Adds an event.
      *
@@ -42,8 +66,6 @@ public class EventServlet extends DispatcherServlet {
      */
     @RequestMethod("POST")
     public void addEvent(String title) {
-        SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
-
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
             session.save(new Event(title, new Date()));
@@ -62,8 +84,6 @@ public class EventServlet extends DispatcherServlet {
     @ResponseMapping(name="events~html.txt", mimeType="text/html")
     @ResponseMapping(name="events~xml.txt", mimeType="application/xml")
     public List<Map<String, ?>> getEvents() {
-        SessionFactory sessionFactory = HibernateSessionFactoryManager.getSessionFactory();
-
         List<?> events;
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();

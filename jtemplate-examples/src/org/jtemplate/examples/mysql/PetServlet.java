@@ -18,6 +18,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
 import org.jtemplate.DispatcherServlet;
@@ -35,11 +36,14 @@ public class PetServlet extends DispatcherServlet {
 
     private static final String DB_URL = "jdbc:mysql://db.local:3306/menagerie?user=root&password=password";
 
-    static {
+    @Override
+    public void init() throws ServletException {
+        super.init();
+
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException exception) {
-            throw new RuntimeException(exception);
+            throw new ServletException(exception);
         }
     }
 
