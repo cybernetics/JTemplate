@@ -15,6 +15,7 @@
 package org.jtemplate.examples;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +44,10 @@ public class EchoServlet extends DispatcherServlet {
         HttpServletResponse response = getResponse();
 
         response.setContentType("text/plain");
-        response.getWriter().append(value);
+
+        PrintWriter writer = response.getWriter();
+
+        writer.append(value);
+        writer.flush();
     }
 }

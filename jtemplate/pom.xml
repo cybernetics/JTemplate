@@ -5,5 +5,5 @@
     <groupId>org.jtemplate</groupId>
     <artifactId>jtemplate</artifactId>
     <name>JTemplate</name>
-    <version>1.3</version>
+    <version>1.4</version>
 </project>
