@@ -49,7 +49,13 @@ import javax.servlet.http.Part;
 public abstract class DispatcherServlet extends HttpServlet {
     private static final long serialVersionUID = 0;
 
-    private HashMap<String, LinkedList<Method>> handlerMap = new HashMap<>();
+    // Resource structure
+    private static class Resource {
+        public final HashMap<String, LinkedList<Method>> handlerMap = new HashMap<>();
+        public final HashMap<String, Resource> resources = new HashMap<>();
+    }
+
+    private Resource root = null;
 
     private ThreadLocal<HttpServletRequest> request = new ThreadLocal<>();
     private ThreadLocal<HttpServletResponse> response = new ThreadLocal<>();
@@ -58,7 +64,9 @@ public abstract class DispatcherServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        // Populate handler map
+        // Populate resource tree
+        root = new Resource();
+
         Method[] methods = getClass().getMethods();
 
         for (int i = 0; i < methods.length; i++) {
@@ -67,14 +75,40 @@ public abstract class DispatcherServlet extends HttpServlet {
             RequestMethod requestMethod = method.getAnnotation(RequestMethod.class);
 
             if (requestMethod != null) {
-                String key = requestMethod.value().toLowerCase();
+                Resource resource = root;
 
-                LinkedList<Method> handlerList = handlerMap.get(key);
+                ResourcePath resourcePath = method.getAnnotation(ResourcePath.class);
+
+                if (resourcePath != null) {
+                    String[] components = resourcePath.value().split("/");
+
+                    for (int j = 0; j < components.length; j++) {
+                        String component = components[j];
+
+                        if (component.length() == 0) {
+                            continue;
+                        }
+
+                        Resource child = resource.resources.get(component);
+
+                        if (child == null) {
+                            child = new Resource();
+
+                            resource.resources.put(component, child);
+                        }
+
+                        resource = child;
+                    }
+                }
+
+                String verb = requestMethod.value().toLowerCase();
+
+                LinkedList<Method> handlerList = resource.handlerMap.get(verb);
 
                 if (handlerList == null) {
                     handlerList = new LinkedList<>();
 
-                    handlerMap.put(key, handlerList);
+                    resource.handlerMap.put(verb, handlerList);
                 }
 
                 handlerList.add(method);
@@ -85,7 +119,11 @@ public abstract class DispatcherServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Look up handler list
-        LinkedList<Method> handlerList = handlerMap.get(request.getMethod().toLowerCase());
+        Resource resource = root;
+
+        // TODO Walk path
+
+        LinkedList<Method> handlerList = resource.handlerMap.get(request.getMethod().toLowerCase());
 
         if (handlerList == null) {
             super.service(request, response);
@@ -160,6 +198,7 @@ public abstract class DispatcherServlet extends HttpServlet {
 
         if (returnType != Void.TYPE && returnType != Void.class) {
             // Determine encoder type
+            // TODO Use name/extension from above
             String pathInfo = request.getPathInfo();
 
             if (pathInfo != null && pathInfo.startsWith(RESPONSE_MAPPING_PREFIX)) {
