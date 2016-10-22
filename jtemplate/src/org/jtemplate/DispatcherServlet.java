@@ -60,7 +60,7 @@ public abstract class DispatcherServlet extends HttpServlet {
     private ThreadLocal<HttpServletRequest> request = new ThreadLocal<>();
     private ThreadLocal<HttpServletResponse> response = new ThreadLocal<>();
 
-    private static final String RESPONSE_MAPPING_PREFIX = "/~";
+    private static final String RESPONSE_MAPPING_PREFIX = "~";
 
     @Override
     public void init() throws ServletException {
@@ -121,12 +121,56 @@ public abstract class DispatcherServlet extends HttpServlet {
         // Look up handler list
         Resource resource = root;
 
-        // TODO Walk path
+        String fileName = request.getServletPath();
+
+        if (fileName.isEmpty()) {
+            fileName = request.getContextPath();
+
+            if (fileName.isEmpty()) {
+                fileName = request.getServerName();
+            }
+        }
+
+        fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
+
+        String extension = null;
+
+        String pathInfo = request.getPathInfo();
+
+        if (pathInfo != null) {
+            String[] components = pathInfo.split("/");
+
+            for (int i = 0; i < components.length; i++) {
+                String component = components[i];
+
+                if (component.length() == 0) {
+                    continue;
+                }
+
+                if (component.startsWith(RESPONSE_MAPPING_PREFIX)) {
+                    extension = component.substring(RESPONSE_MAPPING_PREFIX.length());
+                    break;
+                }
+
+                resource = resource.resources.get(component);
+
+                if (resource == null) {
+                    break;
+                }
+
+                fileName = component;
+            }
+        }
+
+        if (resource == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
         LinkedList<Method> handlerList = resource.handlerMap.get(request.getMethod().toLowerCase());
 
         if (handlerList == null) {
-            super.service(request, response);
+            response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }
 
@@ -135,54 +179,10 @@ public abstract class DispatcherServlet extends HttpServlet {
             request.setCharacterEncoding("UTF-8");
         }
 
-        // Populate parameter map
-        HashMap<String, LinkedList<String>> parameterMap = new HashMap<>();
-
-        Enumeration<String> parameterNames = request.getParameterNames();
-
-        while (parameterNames.hasMoreElements()) {
-            String name = parameterNames.nextElement();
-            String[] values = request.getParameterValues(name);
-
-            LinkedList<String> valueList = new LinkedList<>();
-
-            for (int i = 0; i < values.length; i++) {
-                valueList.add(values[i]);
-            }
-
-            parameterMap.put(name, valueList);
-        }
-
-        // Populate file map
-        HashMap<String, LinkedList<File>> fileMap = new HashMap<>();
-
-        String contentType = request.getContentType();
-
-        if (contentType != null && contentType.startsWith("multipart/form-data")) {
-            for (Part part : request.getParts()) {
-                String submittedFileName = part.getSubmittedFileName();
-
-                if (submittedFileName == null || submittedFileName.length() == 0) {
-                    continue;
-                }
-
-                String name = part.getName();
-
-                LinkedList<File> fileList = fileMap.get(name);
-
-                if (fileList == null) {
-                    fileList = new LinkedList<>();
-                    fileMap.put(name, fileList);
-                }
-
-                File file = File.createTempFile(part.getName(), "_" + part.getSubmittedFileName());
-                part.write(file.getAbsolutePath());
-
-                fileList.add(file);
-            }
-        }
-
         // Look up handler method
+        HashMap<String, LinkedList<String>> parameterMap = getParameterMap(request);
+        HashMap<String, LinkedList<File>> fileMap = getFileMap(request);
+
         Method method = getMethod(handlerList, parameterMap, fileMap);
 
         if (method == null) {
@@ -198,15 +198,11 @@ public abstract class DispatcherServlet extends HttpServlet {
 
         if (returnType != Void.TYPE && returnType != Void.class) {
             // Determine encoder type
-            // TODO Use name/extension from above
-            String pathInfo = request.getPathInfo();
-
-            if (pathInfo != null && pathInfo.startsWith(RESPONSE_MAPPING_PREFIX)) {
+            if (extension != null) {
                 // Look up response mapping
-                String path = request.getServletPath() + "." + pathInfo.substring(RESPONSE_MAPPING_PREFIX.length());
-                String file = path.substring(path.lastIndexOf('/') + 1);
+                fileName += "." + extension;
 
-                String mimeType = servletContext.getMimeType(file);
+                String mimeType = servletContext.getMimeType(fileName);
 
                 if (mimeType != null) {
                     ResponseMapping[] responseMappings = method.getAnnotationsByType(ResponseMapping.class);
@@ -236,7 +232,7 @@ public abstract class DispatcherServlet extends HttpServlet {
                                 encoder = templateEncoder;
 
                                 if (responseMapping.attachment()) {
-                                    response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", file));
+                                    response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName));
                                 }
 
                                 break;
@@ -309,6 +305,59 @@ public abstract class DispatcherServlet extends HttpServlet {
                 }
             }
         }
+    }
+
+    private static HashMap<String, LinkedList<String>> getParameterMap(HttpServletRequest request) {
+        HashMap<String, LinkedList<String>> parameterMap = new HashMap<>();
+
+        Enumeration<String> parameterNames = request.getParameterNames();
+
+        while (parameterNames.hasMoreElements()) {
+            String name = parameterNames.nextElement();
+            String[] values = request.getParameterValues(name);
+
+            LinkedList<String> valueList = new LinkedList<>();
+
+            for (int i = 0; i < values.length; i++) {
+                valueList.add(values[i]);
+            }
+
+            parameterMap.put(name, valueList);
+        }
+
+        return parameterMap;
+    }
+
+    private static HashMap<String, LinkedList<File>> getFileMap(HttpServletRequest request) throws ServletException, IOException {
+        HashMap<String, LinkedList<File>> fileMap = new HashMap<>();
+
+        String contentType = request.getContentType();
+
+        if (contentType != null && contentType.startsWith("multipart/form-data")) {
+            for (Part part : request.getParts()) {
+                String submittedFileName = part.getSubmittedFileName();
+
+                if (submittedFileName == null || submittedFileName.length() == 0) {
+                    continue;
+                }
+
+                String name = part.getName();
+
+                LinkedList<File> fileList = fileMap.get(name);
+
+                if (fileList == null) {
+                    fileList = new LinkedList<>();
+                    fileMap.put(name, fileList);
+                }
+
+                File file = File.createTempFile(part.getName(), "_" + part.getSubmittedFileName());
+                part.write(file.getAbsolutePath());
+
+                fileList.add(file);
+            }
+        }
+
+        return fileMap;
     }
 
     private static Method getMethod(LinkedList<Method> handlerList, HashMap<String, LinkedList<String>> parameterMap,
