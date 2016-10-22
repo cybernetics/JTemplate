@@ -245,7 +245,8 @@ It also includes the following classes for implementing template-driven REST ser
 
 * `org.jtemplate`
     * `DispatcherServlet` - abstract base class for REST services
-    * `RequestMethod` - annotation that specifies the HTTP verb associated with a service method
+    * `RequestMethod` - annotation that associates an HTTP verb with a service method
+    * `ResourcePath` - annotation that associates a resource path with a service method
     * `ResponseMapping` - annotation that associates a template with a method result
     * `JSONEncoder` - class used for encoding responses that are not associated with a template
 * `org.jtemplate.sql`
@@ -439,15 +440,18 @@ In addition to the template processing classes discussed in the previous section
 
 Methods are invoked by submitting an HTTP request for a path associated with a servlet instance. Arguments are provided either via the query string or in the request body, like an HTML form. `DispatcherServlet` converts the request parameters to the expected argument types, invokes the method, and writes the return value to the response stream.
 
-The `RequestMethod` annotation is used to associate a service method with an HTTP verb such as `GET` or `POST`. The optional `ResponseMapping` annotation associates a template document with a method result. If specified, `TemplateEncoder` is used to apply the template to the return value to produce the final response. Otherwise, the return value is automatically serialized as JSON using the `JSONEncoder` class. `RequestMethod`, `ResponseMapping`, and `JSONEncoder` are all discussed in more detail below.
+The `RequestMethod` annotation is used to associate a service method with an HTTP verb such as `GET` or `POST`. The optional `ResourcePath` annotation can be used to associate the method with a specific path relative to the servlet. If unspecified, the method is associated with the servlet itself.
+
+The optional `ResponseMapping` annotation associates a template document with a method result. If specified, `TemplateEncoder` is used to apply the template to the return value to produce the final response. Otherwise, the return value is automatically serialized as JSON using the `JSONEncoder` class. 
 
 For example, the following class might be used to implement a service that performs the simple statistical calculations discussed in the previous section:
 
-    @WebServlet(urlPatterns={"/statistics/*"}, loadOnStartup=1)
-    public class StatisticsServlet extends DispatcherServlet {
+    @WebServlet(urlPatterns={"/math/*"}, loadOnStartup=1)
+    public class MathServlet extends DispatcherServlet {
         private static final long serialVersionUID = 0;
     
         @RequestMethod("GET")
+        @ResourcePath("/statistics")
         @ResponseMapping(name="statistics~html.txt", mimeType="text/html")
         public Map<String, ?> getStatistics(List<Double> values) {
             int count = values.size();
@@ -472,11 +476,13 @@ A specific representation is requested by appending a tilde ("~") character to t
 
 For example, a `GET` for the following URL would return the default JSON response:
 
-    /statistics?values=1&values=3&values=5
+    /math/statistics?values=1&values=3&values=5
     
 However, a `GET` for this URL would return an HTML document produced by applying the template defined in _statistics~html.txt_ to the result:
 
-    /statistics/~html?values=1&values=3&values=5
+    /math/statistics/~html?values=1&values=3&values=5
+
+`RequestMethod`, `ResourcePath`, `ResponseMapping`, and `JSONEncoder` are discussed in more detail below.
 
 #### Method Arguments
 Method arguments may be any of the following types:
@@ -500,11 +506,22 @@ Parameter values for numeric and boolean arguments are converted to the appropri
 
 `URL` arguments represent binary content, such as a file upload submitted via an HTML form. They may be used only with `POST` requests submitted using the "multipart/form-data" encoding. Additionally, the servlet must be tagged with the `javax.servlet.annotation.MultipartConfig` annotation; for example:
 
+    @WebServlet(urlPatterns={"/upload/*"}, loadOnStartup=1)
     @MultipartConfig
     public class FileUploadServlet extends DispatcherServlet {
-        @RequestMethod("POST") 
-        public void upload(URL file) throws IOException { 
-            ... 
+        private static final long serialVersionUID = 0;
+    
+        @RequestMethod("POST")
+        public long upload(URL file) throws IOException {
+            long bytes = 0;
+    
+            try (InputStream inputStream = file.openStream()) {
+                while (inputStream.read() != -1) {
+                    bytes++;
+                }
+            }
+    
+            return bytes;
         }
     }
 
@@ -541,33 +558,42 @@ The methods return thread-local values set by `DispatcherServlet` before a servi
 ### RequestMethod Annotation
 The `RequestMethod` annotation is used to associate an HTTP verb with a service method. The method must be publicly accessible. All public annotated methods automatically become available for remote execution when the service is published. 
 
-Multiple methods may be associated with the same verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, a service might define the following methods, both of which are mapped to the `GET` method:
+Multiple methods may be associated with the same verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, the math service might define the following methods, both of which are mapped to the `GET` method:
 
     @RequestMethod("GET")
+    @ResourcePath("/sum")
     public double getSum(double a, double b) {
         return a + b;
     }
-    
+
     @RequestMethod("GET")
+    @ResourcePath("/sum")
     public double getSum(List<Double> values) {
         double total = 0;
-    
+
         for (double value : values) {
             total += value;
         }
-    
+
         return total;
     }
 
 The following request would cause the first method to be invoked:
 
-    GET /sum?a=2&b=4
+    GET /math/sum?a=2&b=4
     
 This request would invoke the second method:
 
-    GET /sum?values=1&values=2&values=3
+    GET /math/sum?values=1&values=2&values=3
 
 An HTTP 405 ("Method Not Allowed") response is returned when no method matching the given arguments can be found.
+
+### ResourcePath Annotation
+The `ResourcePath` annotation is used to associate a service method with a specific path relative to the servlet. If unspecified, the method is associated with the servlet itself. 
+
+Resource paths can be used to partition the service's methods into logical groups, or to define sub-resources. A slash ("/") character can be used as a path delimiter to partition sub-resources into a hierarchy; for example:
+
+    @ResourcePath("/one/two/three")
 
 ### ResponseMapping Annotation
 The optional `ResponseMapping` annotation is used to associate a template with a service response. It specifies the name of the template that will be applied to the value returned by the method, as well as the MIME type of the content produced by the template. Template documents are stored as resources relative to the service's type on the classpath.
