@@ -241,14 +241,14 @@ JTemplate is distributed as a JAR file that contains the following classes for p
 * `org.jtemplate.util`
     * `IteratorAdapter` - adapter class that presents the contents of an iterator as an iterable cursor
 
-It also includes the following classes for implementing template-driven REST services:
+JTemplate also provides the following classes for implementing template-driven REST services:
 
 * `org.jtemplate`
     * `DispatcherServlet` - abstract base class for REST services
     * `RequestMethod` - annotation that associates an HTTP verb with a service method
     * `ResourcePath` - annotation that associates a resource path with a service method
     * `ResponseMapping` - annotation that associates a template with a method result
-    * `JSONEncoder` - class used for encoding responses that are not associated with a template
+    * `JSONEncoder` - class for encoding responses that are not associated with a template
 * `org.jtemplate.sql`
     * `Parameters` - class for simplifying execution of prepared statements 
 
@@ -262,9 +262,9 @@ The `TemplateEncoder` class is responsible for merging a template document with 
     public TemplateEncoder(URL url, String mimeType) { ... }
     public TemplateEncoder(URL url, String mimeType, Charset charset) { ... }
     
-The first argument specifies the URL of the template document (generally as a resource on the application's classpath). The second represents the MIME type of the content produced by the template. The third argument represents the optional character encoding used by the template document. The default value is UTF-8.
+The first argument specifies the URL of the template document (generally as a resource on the application's classpath). The second represents the MIME type of the content produced by the template. The third argument represents the character encoding used by the template document. The default value is UTF-8.
 
-The following methods can be used to get and set the optional base name of the resource bundle that will be used to resolve resource references:
+The following methods can be used to get and set the optional base name of the resource bundle that will be used to resolve resource references. If unspecified, any resource references will resolve to `null`:
 
     public String getBaseName() { ... }
     public void setBaseName(String baseName) { ... }
@@ -444,7 +444,7 @@ The `RequestMethod` annotation is used to associate a service method with an HTT
 
 The optional `ResponseMapping` annotation associates a template document with a method result. If specified, `TemplateEncoder` is used to apply the template to the return value to produce the final response. Otherwise, the return value is automatically serialized as JSON using the `JSONEncoder` class. 
 
-For example, the following class might be used to implement a service that performs the simple statistical calculations discussed in the previous section:
+For example, the following class might be used to implement a service that performs the simple statistical calculations discussed in the previous section. The static `mapOf()` and `entry()` methods are provided by `DispatcherServlet` to help simplify map creation:
 
     @WebServlet(urlPatterns={"/math/*"}, loadOnStartup=1)
     public class MathServlet extends DispatcherServlet {
@@ -472,6 +472,7 @@ For example, the following class might be used to implement a service that perfo
         }
     }
 
+#### Content Negotiation
 A specific representation is requested by appending a tilde ("~") character to the service URL, followed by a file extension representing the desired document type. The MIME type associated with the extension is used to identify the template to apply. 
 
 For example, a `GET` for the following URL would return the default JSON response:
@@ -532,7 +533,7 @@ Date and time arguments are handled as follows:
 * `java.time.LocalDateTime`: result of calling `LocalDateTime#parse()`
 * `java.util.Date`: result of calling `Long#parseLong()`, then `Date(long)`
 
-`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically coerced to the declared `List` element type; for example, `List<Double>` or `List<String>`. Lists of `URL` values can be used to process multi-file uploads; however, as with single-file uploads, they may only be used with multipart `POST` requests. 
+`List` arguments represent multi-value parameters, such as those submitted via a multi-select list element in an HTML form. Values are automatically converted to the declared `List` element type; for example, `List<Double>` or `List<String>`. Lists of `URL` values can be used to process multi-file uploads; however, as with single-file uploads, they may only be used with multipart `POST` requests. 
 
 Omitting the value of a primitive parameter results in an argument value of 0 for that parameter. Omitting the value of a simple reference type parameter produces a `null` argument value for that parameter. Omitting all values for a list type parameter produces an empty list argument for the parameter.
 
@@ -558,7 +559,7 @@ The methods return thread-local values set by `DispatcherServlet` before a servi
 ### RequestMethod Annotation
 The `RequestMethod` annotation is used to associate an HTTP verb with a service method. The method must be publicly accessible. All public annotated methods automatically become available for remote execution when the service is published. 
 
-Multiple methods may be associated with the same verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, the math service might define the following methods, both of which are mapped to the `GET` method:
+Multiple methods may be associated with the same verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, `MathServlet` might define the following methods, both of which are mapped to the `GET` method:
 
     @RequestMethod("GET")
     @ResourcePath("/sum")
@@ -595,6 +596,8 @@ Resource paths can be used to partition the service's methods into logical group
 
     @ResourcePath("/one/two/three")
 
+If no method is associated with the path info for the current request, HTTP 404 is returned.
+
 ### ResponseMapping Annotation
 The optional `ResponseMapping` annotation is used to associate a template with a service response. It specifies the name of the template that will be applied to the value returned by the method, as well as the MIME type of the content produced by the template. Template documents are stored as resources relative to the service's type on the classpath.
 
@@ -616,7 +619,7 @@ Multiple templates may be associated with a single method. For example, the foll
         }
     }
 
-If an appropriate template cannot be found, HTTP 406 ("Not Acceptable") is returned.
+If an appropriate template cannot be found for the current request, HTTP 406 ("Not Acceptable") is returned.
 
 #### Resource and Context References
 Any resource references in a template document are resolved against the resource bundle with the same base name as the service type, using the locale specified by the current HTTP request. For example, localized string values for the `PetService` class could be stored in a resource bundle named `PetService.properties` located alongside the `PetService` class on the classpath.

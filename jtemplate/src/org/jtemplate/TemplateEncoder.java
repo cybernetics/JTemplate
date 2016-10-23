@@ -68,8 +68,8 @@ public class TemplateEncoder extends Encoder {
 
     private static final int EOF = -1;
 
-    private static final String CONTEXT_PREFIX = "$";
     private static final String RESOURCE_PREFIX = "@";
+    private static final String CONTEXT_PREFIX = "$";
 
     /**
      * Constructs a new template encoder.
@@ -338,8 +338,14 @@ public class TemplateEncoder extends Encoder {
                             String key = components[0];
 
                             Object value;
-                            if (key.startsWith(RESOURCE_PREFIX) && baseName != null) {
-                                value = ResourceBundle.getBundle(baseName, locale).getString(key.substring(RESOURCE_PREFIX.length()));
+                            if (key.startsWith(RESOURCE_PREFIX)) {
+                                if (baseName != null) {
+                                    ResourceBundle resourceBundle = ResourceBundle.getBundle(baseName, locale);
+
+                                    value = resourceBundle.getString(key.substring(RESOURCE_PREFIX.length()));
+                                } else {
+                                    value = null;
+                                }
                             } else if (key.startsWith(CONTEXT_PREFIX)) {
                                 value = context.get(key.substring(CONTEXT_PREFIX.length()));
                             } else if (key.equals(".")) {
