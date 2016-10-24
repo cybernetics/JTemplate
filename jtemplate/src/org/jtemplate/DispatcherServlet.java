@@ -53,12 +53,19 @@ public abstract class DispatcherServlet extends HttpServlet {
     private static class Resource {
         public final HashMap<String, LinkedList<Method>> handlerMap = new HashMap<>();
         public final HashMap<String, Resource> resources = new HashMap<>();
+
+        @Override
+        public String toString() {
+            return handlerMap.keySet().toString() + "; " + resources.toString();
+        }
     }
 
     private Resource root = null;
 
     private ThreadLocal<HttpServletRequest> request = new ThreadLocal<>();
     private ThreadLocal<HttpServletResponse> response = new ThreadLocal<>();
+
+    private ThreadLocal<List<String>> keys = new ThreadLocal<>();
 
     private static final String RESPONSE_MAPPING_PREFIX = "~";
 
@@ -135,6 +142,8 @@ public abstract class DispatcherServlet extends HttpServlet {
 
         String extension = null;
 
+        LinkedList<String> keys = new LinkedList<>();
+
         String pathInfo = request.getPathInfo();
 
         if (pathInfo != null) {
@@ -152,19 +161,27 @@ public abstract class DispatcherServlet extends HttpServlet {
                     break;
                 }
 
-                resource = resource.resources.get(component);
+                if (resource.resources.size() > 0) {
+                    Resource child = resource.resources.get(component);
 
-                if (resource == null) {
-                    break;
+                    if (child == null) {
+                        child = resource.resources.get("?");
+
+                        if (child == null) {
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                            return;
+                        }
+
+                        keys.add(component);
+                    }
+
+                    resource = child;
+
+                    fileName = component;
+                } else {
+                    keys.add(component);
                 }
-
-                fileName = component;
             }
-        }
-
-        if (resource == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
         }
 
         LinkedList<Method> handlerList = resource.handlerMap.get(request.getMethod().toLowerCase());
@@ -256,6 +273,8 @@ public abstract class DispatcherServlet extends HttpServlet {
         // Invoke handler method
         this.request.set(request);
         this.response.set(response);
+
+        this.keys.set(Collections.unmodifiableList(new ArrayList<>(keys)));
 
         Object result = null;
 
@@ -439,7 +458,7 @@ public abstract class DispatcherServlet extends HttpServlet {
                     }
                 }
 
-                argument = list;
+                argument = Collections.unmodifiableList(list);
             } else if (type == URL.class) {
                 LinkedList<File> fileList = fileMap.get(name);
 
@@ -532,6 +551,16 @@ public abstract class DispatcherServlet extends HttpServlet {
      */
     protected HttpServletResponse getResponse() {
         return response.get();
+    }
+
+    /**
+     * Returns the list of keys parsed from the request path.
+     *
+     * @return
+     * The list of keys parsed from the request path.
+     */
+    protected List<String> getKeys() {
+        return keys.get();
     }
 
     /**

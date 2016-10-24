@@ -15,39 +15,37 @@
 package org.jtemplate.examples;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletResponse;
 
 import org.jtemplate.DispatcherServlet;
 import org.jtemplate.RequestMethod;
+import org.jtemplate.ResourcePath;
 
 /**
- * Servlet that echoes a string value by writing a custom response.
+ * Servlet that echoes path variables.
  */
-@WebServlet(urlPatterns={"/echo/*"}, loadOnStartup=1)
-public class EchoServlet extends DispatcherServlet {
+@WebServlet(urlPatterns={"/keys/*"}, loadOnStartup=1)
+public class KeyListServlet extends DispatcherServlet {
     private static final long serialVersionUID = 0;
 
     /**
-     * Echoes a string value to the output stream.
-     *
-     * @param value
-     * The value to echo.
+     * Echoes path variables to the output stream.
      *
      * @throws IOException
      * If an error occurs while writing the response.
      */
     @RequestMethod("GET")
-    public void echo(String value) throws IOException {
-        HttpServletResponse response = getResponse();
+    @ResourcePath("/a/?/b/?/c")
+    public Map<String, ?> echo() throws IOException {
+        List<String> keys = getKeys();
 
-        response.setContentType("text/plain");
-
-        PrintWriter writer = response.getWriter();
-
-        writer.append(value);
-        writer.flush();
+        return mapOf(
+            entry("a", keys.get(0)),
+            entry("b", keys.get(1)),
+            entry("c", keys.subList(2, keys.size()))
+        );
     }
 }

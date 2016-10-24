@@ -29,5 +29,8 @@
 </table>
 </form>
 
+<hr/>
+
+<a href="${pageContext.request.contextPath}/keys/a/héllo/b/göodbye/c/d/e/f">Keys</a></br>
 </body>
 </html>
