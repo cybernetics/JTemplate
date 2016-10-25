@@ -31,6 +31,7 @@
 
 <hr/>
 
-<a href="${pageContext.request.contextPath}/keys/a/héllo/b/göodbye/c/d/e/f">Keys</a></br>
+<a href="${pageContext.request.contextPath}/keys/a/123/b/héllo/c/456?d=göodbye">Key List</a></br>
+<a href="${pageContext.request.contextPath}/keys/a/123/b/héllo/c/456/~html?d=göodbye">Key List (HTML)</a></br>
 </body>
 </html>

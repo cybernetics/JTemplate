@@ -161,26 +161,22 @@ public abstract class DispatcherServlet extends HttpServlet {
                     break;
                 }
 
-                if (resource.resources.size() > 0) {
-                    Resource child = resource.resources.get(component);
+                Resource child = resource.resources.get(component);
+
+                if (child == null) {
+                    child = resource.resources.get("?");
 
                     if (child == null) {
-                        child = resource.resources.get("?");
-
-                        if (child == null) {
-                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                            return;
-                        }
-
-                        keys.add(component);
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        return;
                     }
 
-                    resource = child;
-
-                    fileName = component;
-                } else {
                     keys.add(component);
                 }
+
+                resource = child;
+
+                fileName = component;
             }
         }
 

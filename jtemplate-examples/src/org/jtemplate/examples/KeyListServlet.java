@@ -23,6 +23,7 @@ import javax.servlet.annotation.WebServlet;
 import org.jtemplate.DispatcherServlet;
 import org.jtemplate.RequestMethod;
 import org.jtemplate.ResourcePath;
+import org.jtemplate.ResponseMapping;
 
 /**
  * Servlet that echoes path variables.
@@ -38,14 +39,16 @@ public class KeyListServlet extends DispatcherServlet {
      * If an error occurs while writing the response.
      */
     @RequestMethod("GET")
-    @ResourcePath("/a/?/b/?/c")
-    public Map<String, ?> echo() throws IOException {
+    @ResourcePath("/a/?/b/?/c/?")
+    @ResponseMapping(name="keys~html.txt", mimeType="text/html")
+    public Map<String, ?> echo(String d) throws IOException {
         List<String> keys = getKeys();
 
         return mapOf(
             entry("a", keys.get(0)),
             entry("b", keys.get(1)),
-            entry("c", keys.subList(2, keys.size()))
+            entry("c", keys.get(2)),
+            entry("d", d)
         );
     }
 }
