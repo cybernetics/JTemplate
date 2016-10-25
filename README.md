@@ -544,9 +544,9 @@ Methods may return any type that can be represented by the template associated w
 
 Return values whose types implement `AutoCloseable` (such as `ResultSetAdapter` and `IteratorAdapter`) will be automatically closed after their contents have been written to the output stream. This allows service implementations to stream response data rather than buffering it in memory before it is written.
 
-If the method completes successfully and returns a value, an HTTP 200 status code is returned. If the method returns `void` or `Void` and the response has not already been committed by the method, HTTP 204 is returned.
+If the method completes successfully and returns a value, an HTTP 200 ("OK") status code is returned. If the method returns `void` or `Void` and the response has not already been committed by the method, HTTP 204 ("No Content") is returned.
 
-If any exception is thrown while executing the method, HTTP 500 is returned. If an exception is thrown while serializing the response, the output may be truncated. In either case, the exception is logged.
+If any exception is thrown while executing the method, HTTP 500 ("Internal Server Error") is returned. If an exception is thrown while serializing the response, the output may be truncated. In either case, the exception is logged.
 
 #### Request and Repsonse Properties
 `DispatcherServlet` provides the following methods to allow an implementing class to get access to the current request and response objects; for example, to get the name of the authenticated user or to write a custom response:
@@ -556,10 +556,18 @@ If any exception is thrown while executing the method, HTTP 500 is returned. If 
 
 The methods return thread-local values set by `DispatcherServlet` before a service method is invoked.
 
-### RequestMethod Annotation
+### RequestMethod and ResourcePath Annotations
 The `RequestMethod` annotation is used to associate an HTTP verb with a service method. The method must be publicly accessible. All public annotated methods automatically become available for remote execution when the service is published. 
 
-Multiple methods may be associated with the same verb. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. For example, `MathServlet` might define the following methods, both of which are mapped to the `GET` method:
+The `ResourcePath` annotation is used to associate a service method with a specific path relative to the servlet. If unspecified, the method is associated with the servlet itself. 
+
+Resource paths can be used to partition the service's methods into logical groups, or to define sub-resources. A slash ("/") character can be used as a path delimiter to partition sub-resources into a hierarchy; for example:
+
+    @ResourcePath("/one/two/three")
+
+Multiple methods may be associated with the same verb and path. `DispatcherServlet` selects the best method to execute based on the names of the provided argument values. 
+
+For example, `MathServlet` might define the following methods, both of which are mapped to the `GET` method and the _/sum_ path:
 
     @RequestMethod("GET")
     @ResourcePath("/sum")
@@ -587,16 +595,26 @@ This request would invoke the second method:
 
     GET /math/sum?values=1&values=2&values=3
 
-An HTTP 405 ("Method Not Allowed") response is returned when no method matching the given arguments can be found.
+If an appropriate handler method cannot be found, HTTP 404 ("Not Found") is returned. An HTTP 405 ("Method Not Allowed") response is returned when no method matching the given arguments can be found.
 
-### ResourcePath Annotation
-The `ResourcePath` annotation is used to associate a service method with a specific path relative to the servlet. If unspecified, the method is associated with the servlet itself. 
+#### Path Variables
+Path variables may be specified using the "?" character; for example:
 
-Resource paths can be used to partition the service's methods into logical groups, or to define sub-resources. A slash ("/") character can be used as a path delimiter to partition sub-resources into a hierarchy; for example:
+    @RequestMethod("GET")
+    @ResourcePath("/contacts/?/addresses/?")
+    public List<Map<String, ?>> getContactAddresses() { ... }
 
-    @ResourcePath("/one/two/three")
+The `getKeys()` method of the `DispatcherServlet` class returns the list of path variables associated with the current request:
 
-If no method is associated with the path info for the current request, HTTP 404 is returned.
+    public List<String> getKeys() { ... }
+    
+For example, given the following path:
+
+    /contacts/jsmith/addresses/home
+
+`getKeys()` would return the following:
+
+    ["jsmith", "home"]
 
 ### ResponseMapping Annotation
 The optional `ResponseMapping` annotation is used to associate a template with a service response. It specifies the name of the template that will be applied to the value returned by the method, as well as the MIME type of the content produced by the template. Template documents are stored as resources relative to the service's type on the classpath.
